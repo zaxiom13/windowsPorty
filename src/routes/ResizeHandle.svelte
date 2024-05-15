@@ -77,5 +77,9 @@
     }
   </style>
   
-  <div class="resize-handle" data-direction={direction}></div>
+  <div
+    class="resize-handle"
+    data-direction={direction}
+    on:mousedown
+  ></div>
   

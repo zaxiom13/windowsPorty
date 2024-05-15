@@ -16,6 +16,17 @@
 	let tile: HTMLDivElement;
 	let desktop: HTMLDivElement;
 
+	const directions = [
+		'top-left',
+		'top-right',
+		'bottom-left',
+		'bottom-right',
+		'top',
+		'bottom',
+		'left',
+		'right'
+	];
+
 	onMount(() => {
 		setTileElement(tile);
 		setDesktopElement(desktop);
@@ -33,14 +44,9 @@
 	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}>
 		<div class="titlebar">Title Bar</div>
 		<div class="body">Tile Body</div>
-		<ResizeHandle direction="top-left" />
-		<ResizeHandle direction="top-right" />
-		<ResizeHandle direction="bottom-left" />
-		<ResizeHandle direction="bottom-right" />
-		<ResizeHandle direction="top" />
-		<ResizeHandle direction="bottom" />
-		<ResizeHandle direction="left" />
-		<ResizeHandle direction="right" />
+		{#each directions as direction}
+			<ResizeHandle {direction} on:mousedown={onMouseDown} />
+		{/each}
 	</div>
 	<Taskbar />
 </div>
