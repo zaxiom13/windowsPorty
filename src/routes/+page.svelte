@@ -5,9 +5,10 @@
 	  setDesktopElement,
 	  onMouseDown,
 	  onMouseMove,
-	  onMouseUp
-	} from './../window.svelte.ts'
-
+	  onMouseUp,
+	  onResizeMove,
+	  onResizeUp
+	} from './../window.svelte';
   
 	let tile: HTMLDivElement;
 	let desktop: HTMLDivElement;
@@ -19,6 +20,8 @@
 	  return () => {
 		window.removeEventListener('mousemove', onMouseMove);
 		window.removeEventListener('mouseup', onMouseUp);
+		window.removeEventListener('mousemove', onResizeMove);
+		window.removeEventListener('mouseup', onResizeUp);
 	  };
 	});
   </script>
@@ -39,6 +42,8 @@
 	  position: absolute;
 	  top: 0;
 	  left: 0;
+	  display: flex;
+	  flex-direction: column;
 	}
   
 	.titlebar {
@@ -57,6 +62,80 @@
 	  width: 100%;
 	  height: calc(100% - 30px);
 	  background-color: #ecf0f1;
+	  flex: 1;
+	}
+  
+	.resize-handle {
+	  position: absolute;
+	  background: transparent;
+	}
+  
+	.resize-handle:hover {
+	  background: #95a5a6;
+	}
+  
+	.resize-handle[data-direction*="top"] {
+	  top: -5px;
+	  height: 10px;
+	}
+  
+	.resize-handle[data-direction*="bottom"] {
+	  bottom: -5px;
+	  height: 10px;
+	}
+  
+	.resize-handle[data-direction*="left"] {
+	  left: -5px;
+	  width: 10px;
+	}
+  
+	.resize-handle[data-direction*="right"] {
+	  right: -5px;
+	  width: 10px;
+	}
+  
+	.resize-handle[data-direction="top-left"] {
+	  cursor: nwse-resize;
+	  width: 10px;
+	  height: 10px;
+	}
+  
+	.resize-handle[data-direction="top-right"] {
+	  cursor: nesw-resize;
+	  width: 10px;
+	  height: 10px;
+	}
+  
+	.resize-handle[data-direction="bottom-left"] {
+	  cursor: nesw-resize;
+	  width: 10px;
+	  height: 10px;
+	}
+  
+	.resize-handle[data-direction="bottom-right"] {
+	  cursor: nwse-resize;
+	  width: 10px;
+	  height: 10px;
+	}
+  
+	.resize-handle[data-direction="top"] {
+	  cursor: ns-resize;
+	  width: 100%;
+	}
+  
+	.resize-handle[data-direction="bottom"] {
+	  cursor: ns-resize;
+	  width: 100%;
+	}
+  
+	.resize-handle[data-direction="left"] {
+	  cursor: ew-resize;
+	  height: 100%;
+	}
+  
+	.resize-handle[data-direction="right"] {
+	  cursor: ew-resize;
+	  height: 100%;
 	}
   </style>
   
@@ -64,6 +143,14 @@
 	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}>
 	  <div class="titlebar">Title Bar</div>
 	  <div class="body">Tile Body</div>
+	  <div class="resize-handle" data-direction="top-left"></div>
+	  <div class="resize-handle" data-direction="top-right"></div>
+	  <div class="resize-handle" data-direction="bottom-left"></div>
+	  <div class="resize-handle" data-direction="bottom-right"></div>
+	  <div class="resize-handle" data-direction="top"></div>
+	  <div class="resize-handle" data-direction="bottom"></div>
+	  <div class="resize-handle" data-direction="left"></div>
+	  <div class="resize-handle" data-direction="right"></div>
 	</div>
   </div>
   

@@ -1,7 +1,10 @@
+// src/page.ts
 let isDragging = false;
-let startX: number, startY: number, initialX: number, initialY: number;
+let isResizing = false;
+let startX: number, startY: number, initialX: number, initialY: number, initialWidth: number, initialHeight: number;
 let tile: HTMLDivElement;
 let desktop: HTMLDivElement;
+let resizeDirection: string;
 
 export function setTileElement(element: HTMLDivElement) {
   tile = element;
@@ -22,6 +25,19 @@ export function onMouseDown(event: MouseEvent) {
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
+    event.preventDefault();
+  } else if (target.classList.contains('resize-handle')) {
+    isResizing = true;
+    startX = event.clientX;
+    startY = event.clientY;
+    initialWidth = tile.clientWidth;
+    initialHeight = tile.clientHeight;
+    initialX = tile.offsetLeft;
+    initialY = tile.offsetTop;
+    resizeDirection = target.dataset.direction as string;
+
+    window.addEventListener('mousemove', onResizeMove);
+    window.addEventListener('mouseup', onResizeUp);
     event.preventDefault();
   }
 }
@@ -52,4 +68,32 @@ export function onMouseUp() {
   isDragging = false;
   window.removeEventListener('mousemove', onMouseMove);
   window.removeEventListener('mouseup', onMouseUp);
+}
+
+export function onResizeMove(event: MouseEvent) {
+  if (!isResizing) return;
+
+  const dx = event.clientX - startX;
+  const dy = event.clientY - startY;
+
+  if (resizeDirection.includes('right')) {
+    tile.style.width = `${initialWidth + dx}px`;
+  }
+  if (resizeDirection.includes('bottom')) {
+    tile.style.height = `${initialHeight + dy}px`;
+  }
+  if (resizeDirection.includes('left')) {
+    tile.style.width = `${initialWidth - dx}px`;
+    tile.style.left = `${initialX + dx}px`;
+  }
+  if (resizeDirection.includes('top')) {
+    tile.style.height = `${initialHeight - dy}px`;
+    tile.style.top = `${initialY + dy}px`;
+  }
+}
+
+export function onResizeUp() {
+  isResizing = false;
+  window.removeEventListener('mousemove', onResizeMove);
+  window.removeEventListener('mouseup', onResizeUp);
 }
