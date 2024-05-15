@@ -97,3 +97,9 @@ export function onResizeUp() {
   window.removeEventListener('mousemove', onResizeMove);
   window.removeEventListener('mouseup', onResizeUp);
 }
+
+
+export const handleMouseLeave = () => {
+  //onMouseUp();
+  onResizeUp();
+};

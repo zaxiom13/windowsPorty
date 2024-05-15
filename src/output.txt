@@ -1,0 +1,363 @@
+=======================
+File: app.d.ts
+=======================
+// See https://kit.svelte.dev/docs/types#app
+// for information about these interfaces
+declare global {
+	namespace App {
+		// interface Error {}
+		// interface Locals {}
+		// interface PageData {}
+		// interface PageState {}
+		// interface Platform {}
+	}
+}
+
+export {};
+
+=======================
+File: app.html
+=======================
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
+
+=======================
+File: output.txt
+=======================
+
+=======================
+File: repo_to_txt.sh
+=======================
+#!/bin/bash
+
+# Directory containing the text files
+DIR="."
+
+# Output file
+OUTPUT="output.txt"
+
+# Clear the output file if it exists
+> "$OUTPUT"
+
+# Find all text files in the directory and subdirectories, excluding certain file types
+find "$DIR" -type f ! \( -name '*.svg' -o -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.webp' -o -name '*.gif' -o -name '*.bmp' \) | while read -r FILE; do
+    FILENAME=$(basename "$FILE")
+    # Add a banner with the filename
+    echo "=======================" >> "$OUTPUT"
+    echo "File: $FILENAME" >> "$OUTPUT"
+    echo "=======================" >> "$OUTPUT"
+    # Append the contents of each file to the output file
+    cat "$FILE" >> "$OUTPUT"
+    echo >> "$OUTPUT"  # Add a newline for separation
+done
+
+echo "All files have been concatenated into $OUTPUT"
+
+=======================
+File: +layout.svelte
+=======================
+<script>
+</script>
+
+<div >
+
+
+	<main>
+		<slot />
+	</main>
+
+
+</div>
+
+
+=======================
+File: +page.svelte
+=======================
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import {
+		setTileElement,
+		setDesktopElement,
+		onMouseDown,
+		onMouseMove,
+		onMouseUp,
+		onResizeMove,
+		onResizeUp,
+		handleMouseLeave
+	} from './../window.svelte';
+
+	let tile: HTMLDivElement;
+	let desktop: HTMLDivElement;
+
+	onMount(() => {
+		setTileElement(tile);
+		setDesktopElement(desktop);
+
+
+
+		return () => {
+			window.removeEventListener('mousemove', onMouseMove);
+			window.removeEventListener('mouseup', onMouseUp);
+			window.removeEventListener('mousemove', onResizeMove);
+			window.removeEventListener('mouseup', onResizeUp);
+		};
+	});
+</script>
+
+<div class="desktop" bind:this={desktop} on:mouseleave={handleMouseLeave}>
+	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}>
+		<div class="titlebar">Title Bar</div>
+		<div class="body">Tile Body</div>
+		<div class="resize-handle" data-direction="top-left"></div>
+		<div class="resize-handle" data-direction="top-right"></div>
+		<div class="resize-handle" data-direction="bottom-left"></div>
+		<div class="resize-handle" data-direction="bottom-right"></div>
+		<div class="resize-handle" data-direction="top"></div>
+		<div class="resize-handle" data-direction="bottom"></div>
+		<div class="resize-handle" data-direction="left"></div>
+		<div class="resize-handle" data-direction="right"></div>
+	</div>
+</div>
+
+<style>
+	.desktop {
+		width: 100%;
+		height: 100vh;
+		border: 1px solid #000;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.tile {
+		width: 200px;
+		height: 200px;
+		background-color: #3498db;
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.titlebar {
+		width: 100%;
+		height: 30px;
+		background-color: #2980b9;
+		cursor: grab;
+		user-select: none; /* Prevent text selection while dragging */
+	}
+
+	.titlebar:active {
+		cursor: grabbing;
+	}
+
+	.body {
+		width: 100%;
+		height: calc(100% - 30px);
+		background-color: #ecf0f1;
+		flex: 1;
+	}
+
+	.resize-handle {
+		position: absolute;
+		background: transparent;
+	}
+
+	.resize-handle:hover {
+		background: #95a5a6;
+	}
+
+	.resize-handle[data-direction*='top'] {
+		top: -5px;
+		height: 10px;
+	}
+
+	.resize-handle[data-direction*='bottom'] {
+		bottom: -5px;
+		height: 10px;
+	}
+
+	.resize-handle[data-direction*='left'] {
+		left: -5px;
+		width: 10px;
+	}
+
+	.resize-handle[data-direction*='right'] {
+		right: -5px;
+		width: 10px;
+	}
+
+	.resize-handle[data-direction='top-left'] {
+		cursor: nwse-resize;
+		width: 10px;
+		height: 10px;
+	}
+
+	.resize-handle[data-direction='top-right'] {
+		cursor: nesw-resize;
+		width: 10px;
+		height: 10px;
+	}
+
+	.resize-handle[data-direction='bottom-left'] {
+		cursor: nesw-resize;
+		width: 10px;
+		height: 10px;
+	}
+
+	.resize-handle[data-direction='bottom-right'] {
+		cursor: nwse-resize;
+		width: 10px;
+		height: 10px;
+	}
+
+	.resize-handle[data-direction='top'] {
+		cursor: ns-resize;
+		width: 100%;
+	}
+
+	.resize-handle[data-direction='bottom'] {
+		cursor: ns-resize;
+		width: 100%;
+	}
+
+	.resize-handle[data-direction='left'] {
+		cursor: ew-resize;
+		height: 100%;
+	}
+
+	.resize-handle[data-direction='right'] {
+		cursor: ew-resize;
+		height: 100%;
+	}
+</style>
+
+=======================
+File: +page.ts
+=======================
+// since there's no dynamic data here, we can prerender
+// it so that it gets served as a static asset in production
+export const prerender = true;
+
+=======================
+File: styles.css
+=======================
+
+=======================
+File: window.svelte.ts
+=======================
+// src/page.ts
+let isDragging = false;
+let isResizing = false;
+let startX: number, startY: number, initialX: number, initialY: number, initialWidth: number, initialHeight: number;
+let tile: HTMLDivElement;
+let desktop: HTMLDivElement;
+let resizeDirection: string;
+
+export function setTileElement(element: HTMLDivElement) {
+  tile = element;
+}
+
+export function setDesktopElement(element: HTMLDivElement) {
+  desktop = element;
+}
+
+export function onMouseDown(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  if (target.classList.contains('titlebar')) {
+    isDragging = true;
+    startX = event.clientX;
+    startY = event.clientY;
+    initialX = tile.offsetLeft;
+    initialY = tile.offsetTop;
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    event.preventDefault();
+  } else if (target.classList.contains('resize-handle')) {
+    isResizing = true;
+    startX = event.clientX;
+    startY = event.clientY;
+    initialWidth = tile.clientWidth;
+    initialHeight = tile.clientHeight;
+    initialX = tile.offsetLeft;
+    initialY = tile.offsetTop;
+    resizeDirection = target.dataset.direction as string;
+
+    window.addEventListener('mousemove', onResizeMove);
+    window.addEventListener('mouseup', onResizeUp);
+    event.preventDefault();
+  }
+}
+
+export function onMouseMove(event: MouseEvent) {
+  if (!isDragging) return;
+
+  const dx = event.clientX - startX;
+  const dy = event.clientY - startY;
+
+  let newX = initialX + dx;
+  let newY = initialY + dy;
+
+  // Boundary conditions
+  const rect = desktop.getBoundingClientRect();
+  const tileRect = tile.getBoundingClientRect();
+
+  if (newX < 0) newX = 0;
+  if (newY < 0) newY = 0;
+  if (newX + tileRect.width > rect.width) newX = rect.width - tileRect.width;
+  if (newY + tileRect.height > rect.height) newY = rect.height - tileRect.height;
+
+  tile.style.left = `${newX}px`;
+  tile.style.top = `${newY}px`;
+}
+
+export function onMouseUp() {
+  isDragging = false;
+  window.removeEventListener('mousemove', onMouseMove);
+  window.removeEventListener('mouseup', onMouseUp);
+}
+
+export function onResizeMove(event: MouseEvent) {
+  if (!isResizing) return;
+
+  const dx = event.clientX - startX;
+  const dy = event.clientY - startY;
+
+  if (resizeDirection.includes('right')) {
+    tile.style.width = `${initialWidth + dx}px`;
+  }
+  if (resizeDirection.includes('bottom')) {
+    tile.style.height = `${initialHeight + dy}px`;
+  }
+  if (resizeDirection.includes('left')) {
+    tile.style.width = `${initialWidth - dx}px`;
+    tile.style.left = `${initialX + dx}px`;
+  }
+  if (resizeDirection.includes('top')) {
+    tile.style.height = `${initialHeight - dy}px`;
+    tile.style.top = `${initialY + dy}px`;
+  }
+}
+
+export function onResizeUp() {
+  isResizing = false;
+  window.removeEventListener('mousemove', onResizeMove);
+  window.removeEventListener('mouseup', onResizeUp);
+}
+
+
+export const handleMouseLeave = () => {
+  //onMouseUp();
+  onResizeUp();
+};
