@@ -32,6 +32,43 @@ File: app.html
 </html>
 
 =======================
+File: complete_output.sh
+=======================
+#!/bin/bash
+
+
+
+# Run script1.sh and script2.sh
+./show_tree.sh 
+./repo_to_txt.sh
+
+# Optional: Clean up individual output files if not needed
+rm "./directory_structure.txt"
+=======================
+File: directory_structure.txt
+=======================
+
+.
+├── app.d.ts
+├── app.html
+├── complete_output.sh
+├── directory_structure.txt
+lib
+images
+├── github.svg
+├── svelte-logo.svg
+├── svelte-welcome.png
+└── svelte-welcome.webp
+├── repo_to_txt.sh
+routes
+├── +layout.svelte
+├── +page.svelte
+├── +page.ts
+└── styles.css
+├── show_tree.sh
+└── window.svelte.ts
+
+=======================
 File: output.txt
 =======================
 
@@ -40,7 +77,7 @@ File: repo_to_txt.sh
 =======================
 #!/bin/bash
 
-# Directory containing the text files
+# Directory containing the files
 DIR="."
 
 # Output file
@@ -49,7 +86,7 @@ OUTPUT="output.txt"
 # Clear the output file if it exists
 > "$OUTPUT"
 
-# Find all text files in the directory and subdirectories, excluding certain file types
+# Find all files in the directory and subdirectories, excluding certain file types
 find "$DIR" -type f ! \( -name '*.svg' -o -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.webp' -o -name '*.gif' -o -name '*.bmp' \) | while read -r FILE; do
     FILENAME=$(basename "$FILE")
     # Add a banner with the filename
@@ -252,6 +289,59 @@ export const prerender = true;
 =======================
 File: styles.css
 =======================
+
+=======================
+File: show_tree.sh
+=======================
+#!/bin/bash
+
+output_file="directory_structure.txt"
+
+# Function to recursively print directory structure
+print_tree() {
+    local current_dir="$1"
+    local indent="$2"
+    local is_last="$3"
+    local prefix=""
+
+    if [ "$indent" != "" ]; then
+        prefix="$indent"
+        if [ "$is_last" = true ]; then
+            prefix+="└── "
+            indent+="    "
+        else
+            prefix+="├── "
+            indent+="│   "
+        fi
+    fi
+
+    echo "${prefix}$(basename "$current_dir")" >> "$output_file"
+
+    local items=("$current_dir"/*)
+    local total_items=${#items[@]}
+    local count=1
+
+    for item in "${items[@]}"; do
+        if [ -d "$item" ]; then
+            print_tree "$item" "$indent" $(( count == total_items ))
+        else
+            if [ $count -eq $total_items ]; then
+                echo "${indent}└── $(basename "$item")" >> "$output_file"
+            else
+                echo "${indent}├── $(basename "$item")" >> "$output_file"
+            fi
+        fi
+        ((count++))
+    done
+}
+
+# Clear the output file
+echo "" > "$output_file"
+
+# Start printing from the current directory
+print_tree "." "" true
+
+echo "Directory structure has been written to $output_file"
 
 =======================
 File: window.svelte.ts

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Directory containing the text files
+# Directory containing the files
 DIR="."
 
 # Output file
@@ -9,7 +9,7 @@ OUTPUT="output.txt"
 # Clear the output file if it exists
 > "$OUTPUT"
 
-# Find all text files in the directory and subdirectories, excluding certain file types
+# Find all files in the directory and subdirectories, excluding certain file types
 find "$DIR" -type f ! \( -name '*.svg' -o -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.webp' -o -name '*.gif' -o -name '*.bmp' \) | while read -r FILE; do
     FILENAME=$(basename "$FILE")
     # Add a banner with the filename
