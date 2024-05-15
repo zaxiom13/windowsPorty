@@ -59,12 +59,14 @@ images
 ├── svelte-logo.svg
 ├── svelte-welcome.png
 └── svelte-welcome.webp
+├── output.txt
 ├── repo_to_txt.sh
 routes
 ├── +layout.svelte
 ├── +page.svelte
 ├── +page.ts
-└── styles.css
+├── styles.css
+└── Taskbar.svelte
 ├── show_tree.sh
 └── window.svelte.ts
 
@@ -122,163 +124,167 @@ File: +page.svelte
 =======================
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Taskbar from './Taskbar.svelte'; // Adjust the path as necessary
 	import {
-		setTileElement,
-		setDesktopElement,
-		onMouseDown,
-		onMouseMove,
-		onMouseUp,
-		onResizeMove,
-		onResizeUp,
-		handleMouseLeave
+	  setTileElement,
+	  setDesktopElement,
+	  onMouseDown,
+	  onMouseMove,
+	  onMouseUp,
+	  onResizeMove,
+	  onResizeUp,
+	  handleMouseLeave
 	} from './../window.svelte';
-
+  
 	let tile: HTMLDivElement;
 	let desktop: HTMLDivElement;
-
+  
 	onMount(() => {
-		setTileElement(tile);
-		setDesktopElement(desktop);
-
-
-
-		return () => {
-			window.removeEventListener('mousemove', onMouseMove);
-			window.removeEventListener('mouseup', onMouseUp);
-			window.removeEventListener('mousemove', onResizeMove);
-			window.removeEventListener('mouseup', onResizeUp);
-		};
+	  setTileElement(tile);
+	  setDesktopElement(desktop);
+  
+	  return () => {
+		window.removeEventListener('mousemove', onMouseMove);
+		window.removeEventListener('mouseup', onMouseUp);
+		window.removeEventListener('mousemove', onResizeMove);
+		window.removeEventListener('mouseup', onResizeUp);
+	  };
 	});
-</script>
-
-<div class="desktop" bind:this={desktop} on:mouseleave={handleMouseLeave}>
+  </script>
+  
+  <div class="desktop" bind:this={desktop} on:mouseleave={handleMouseLeave}>
 	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}>
-		<div class="titlebar">Title Bar</div>
-		<div class="body">Tile Body</div>
-		<div class="resize-handle" data-direction="top-left"></div>
-		<div class="resize-handle" data-direction="top-right"></div>
-		<div class="resize-handle" data-direction="bottom-left"></div>
-		<div class="resize-handle" data-direction="bottom-right"></div>
-		<div class="resize-handle" data-direction="top"></div>
-		<div class="resize-handle" data-direction="bottom"></div>
-		<div class="resize-handle" data-direction="left"></div>
-		<div class="resize-handle" data-direction="right"></div>
+	  <div class="titlebar">Title Bar</div>
+	  <div class="body">Tile Body</div>
+	  <div class="resize-handle" data-direction="top-left"></div>
+	  <div class="resize-handle" data-direction="top-right"></div>
+	  <div class="resize-handle" data-direction="bottom-left"></div>
+	  <div class="resize-handle" data-direction="bottom-right"></div>
+	  <div class="resize-handle" data-direction="top"></div>
+	  <div class="resize-handle" data-direction="bottom"></div>
+	  <div class="resize-handle" data-direction="left"></div>
+	  <div class="resize-handle" data-direction="right"></div>
 	</div>
-</div>
-
-<style>
+	<Taskbar />
+  </div>
+  
+  <style>
 	.desktop {
-		width: 100%;
-		height: 100vh;
-		border: 1px solid #000;
-		position: relative;
-		overflow: hidden;
+	  width: 100%;
+	  height: 100vh;
+	  border: 1px solid #000;
+	  position: relative;
+	  overflow: hidden;
 	}
-
+  
 	.tile {
-		width: 200px;
-		height: 200px;
-		background-color: #3498db;
-		position: absolute;
-		top: 0;
-		left: 0;
-		display: flex;
-		flex-direction: column;
+	  width: 200px;
+	  height: 200px;
+	  background-color: #3498db;
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  display: flex;
+	  flex-direction: column;
+	  min-width: 100px; /* Set minimum width */
+	  min-height: 100px; /* Set minimum height */
+	  max-width: 500px; /* Set maximum width */
+	  max-height: 500px; /* Set maximum height */
 	}
-
+  
 	.titlebar {
-		width: 100%;
-		height: 30px;
-		background-color: #2980b9;
-		cursor: grab;
-		user-select: none; /* Prevent text selection while dragging */
+	  width: 100%;
+	  height: 30px;
+	  background-color: #2980b9;
+	  cursor: grab;
+	  user-select: none; /* Prevent text selection while dragging */
 	}
-
+  
 	.titlebar:active {
-		cursor: grabbing;
+	  cursor: grabbing;
 	}
-
+  
 	.body {
-		width: 100%;
-		height: calc(100% - 30px);
-		background-color: #ecf0f1;
-		flex: 1;
+	  width: 100%;
+	  height: calc(100% - 30px);
+	  background-color: #ecf0f1;
+	  flex: 1;
 	}
-
+  
 	.resize-handle {
-		position: absolute;
-		background: transparent;
+	  position: absolute;
+	  background: transparent;
 	}
-
+  
 	.resize-handle:hover {
-		background: #95a5a6;
+	  background: #95a5a6;
 	}
-
+  
 	.resize-handle[data-direction*='top'] {
-		top: -5px;
-		height: 10px;
+	  top: -5px;
+	  height: 10px;
 	}
-
+  
 	.resize-handle[data-direction*='bottom'] {
-		bottom: -5px;
-		height: 10px;
+	  bottom: -5px;
+	  height: 10px;
 	}
-
+  
 	.resize-handle[data-direction*='left'] {
-		left: -5px;
-		width: 10px;
+	  left: -5px;
+	  width: 10px;
 	}
-
+  
 	.resize-handle[data-direction*='right'] {
-		right: -5px;
-		width: 10px;
+	  right: -5px;
+	  width: 10px;
 	}
-
+  
 	.resize-handle[data-direction='top-left'] {
-		cursor: nwse-resize;
-		width: 10px;
-		height: 10px;
+	  cursor: nwse-resize;
+	  width: 10px;
+	  height: 10px;
 	}
-
+  
 	.resize-handle[data-direction='top-right'] {
-		cursor: nesw-resize;
-		width: 10px;
-		height: 10px;
+	  cursor: nesw-resize;
+	  width: 10px;
+	  height: 10px;
 	}
-
+  
 	.resize-handle[data-direction='bottom-left'] {
-		cursor: nesw-resize;
-		width: 10px;
-		height: 10px;
+	  cursor: nesw-resize;
+	  width: 10px;
+	  height: 10px;
 	}
-
+  
 	.resize-handle[data-direction='bottom-right'] {
-		cursor: nwse-resize;
-		width: 10px;
-		height: 10px;
+	  cursor: nwse-resize;
+	  width: 10px;
+	  height: 10px;
 	}
-
+  
 	.resize-handle[data-direction='top'] {
-		cursor: ns-resize;
-		width: 100%;
+	  cursor: ns-resize;
+	  width: 100%;
 	}
-
+  
 	.resize-handle[data-direction='bottom'] {
-		cursor: ns-resize;
-		width: 100%;
+	  cursor: ns-resize;
+	  width: 100%;
 	}
-
+  
 	.resize-handle[data-direction='left'] {
-		cursor: ew-resize;
-		height: 100%;
+	  cursor: ew-resize;
+	  height: 100%;
 	}
-
+  
 	.resize-handle[data-direction='right'] {
-		cursor: ew-resize;
-		height: 100%;
+	  cursor: ew-resize;
+	  height: 100%;
 	}
-</style>
-
+  </style>
+  
 =======================
 File: +page.ts
 =======================
@@ -290,6 +296,38 @@ export const prerender = true;
 File: styles.css
 =======================
 
+=======================
+File: Taskbar.svelte
+=======================
+<script>
+    // You can add taskbar logic here if needed
+  </script>
+  
+  <style>
+    .taskbar {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 40px;
+      background-color: #2c3e50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      color: white;
+      box-sizing: border-box;
+    }
+    .taskbar-item {
+      margin: 0 10px;
+    }
+  </style>
+  
+  <div class="taskbar">
+    <div class="taskbar-item">Start</div>
+
+    <!-- Add more taskbar items as needed -->
+  </div>
+  
 =======================
 File: show_tree.sh
 =======================
@@ -346,7 +384,6 @@ echo "Directory structure has been written to $output_file"
 =======================
 File: window.svelte.ts
 =======================
-// src/page.ts
 let isDragging = false;
 let isResizing = false;
 let startX: number, startY: number, initialX: number, initialY: number, initialWidth: number, initialHeight: number;
@@ -424,20 +461,60 @@ export function onResizeMove(event: MouseEvent) {
   const dx = event.clientX - startX;
   const dy = event.clientY - startY;
 
+  let newWidth = initialWidth;
+  let newHeight = initialHeight;
+  let newX = initialX;
+  let newY = initialY;
+
   if (resizeDirection.includes('right')) {
-    tile.style.width = `${initialWidth + dx}px`;
+    newWidth = initialWidth + dx;
   }
   if (resizeDirection.includes('bottom')) {
-    tile.style.height = `${initialHeight + dy}px`;
+    newHeight = initialHeight + dy;
   }
   if (resizeDirection.includes('left')) {
-    tile.style.width = `${initialWidth - dx}px`;
-    tile.style.left = `${initialX + dx}px`;
+    newWidth = initialWidth - dx;
+    newX = initialX + dx;
   }
   if (resizeDirection.includes('top')) {
-    tile.style.height = `${initialHeight - dy}px`;
-    tile.style.top = `${initialY + dy}px`;
+    newHeight = initialHeight - dy;
+    newY = initialY + dy;
   }
+
+  // Apply min and max width and height
+  const minWidth = 100;
+  const minHeight = 100;
+  const maxWidth = 500;
+  const maxHeight = 500;
+
+  if (newWidth < minWidth) {
+    newWidth = minWidth;
+    if (resizeDirection.includes('left')) {
+      newX = initialX + (initialWidth - minWidth);
+    }
+  } else if (newWidth > maxWidth) {
+    newWidth = maxWidth;
+    if (resizeDirection.includes('left')) {
+      newX = initialX + (initialWidth - maxWidth);
+    }
+  }
+
+  if (newHeight < minHeight) {
+    newHeight = minHeight;
+    if (resizeDirection.includes('top')) {
+      newY = initialY + (initialHeight - minHeight);
+    }
+  } else if (newHeight > maxHeight) {
+    newHeight = maxHeight;
+    if (resizeDirection.includes('top')) {
+      newY = initialY + (initialHeight - maxHeight);
+    }
+  }
+
+  tile.style.width = `${newWidth}px`;
+  tile.style.height = `${newHeight}px`;
+  tile.style.left = `${newX}px`;
+  tile.style.top = `${newY}px`;
 }
 
 export function onResizeUp() {
@@ -446,8 +523,7 @@ export function onResizeUp() {
   window.removeEventListener('mouseup', onResizeUp);
 }
 
-
 export const handleMouseLeave = () => {
-  //onMouseUp();
   onResizeUp();
 };
+
