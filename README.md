@@ -1,38 +1,38 @@
-# create-svelte
+Windows XP in the Browser
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+Welcome to my portfolio page, a Windows XP-like experience brought to life in your browser! This project is a showcase of my skills, talents, and various side projects I've worked on. Explore the desktop, interact with the apps, and dive into my world of coding and creativity.
 
-## Creating a project
 
-If you're seeing this, you've probably already done this step. Congrats!
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+About the Project
 
-## Developing
+This project aims to recreate the nostalgic Windows XP experience right in your browser. It serves as my portfolio page, highlighting my expertise and the projects I've developed. Each app within this environment showcases a different aspect of my skill set, from web development to creative coding projects.
+Features
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+    Authentic Windows XP Interface: Experience the classic look and feel of Windows XP.
+    Interactive Desktop: Click on icons to open various apps and explore my projects.
+    Multiple Apps: Each app demonstrates a different project or skill.
+    Responsive Design: Works smoothly across different devices and screen sizes.
+    Smooth Animations: Enjoy a visually appealing and interactive experience.
 
-```bash
-npm run dev
+Technologies Used
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
 
-## Building
 
-To create a production version of your app:
 
-```bash
-npm run build
-```
+Here are some of the apps you can find on my portfolio desktop:
 
-You can preview the production build with `npm run preview`.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+
+
+
+Contact
+
+Have questions or want to collaborate? Reach out to me!
+
+    Email:
+    GitHub: 
+    LinkedIn: 
+
+Thank you for visiting my portfolio! I hope you enjoy exploring my projects as much as I enjoyed creating them.
