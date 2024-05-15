@@ -1,50 +1,50 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Taskbar from './Taskbar.svelte'; // Adjust the path as necessary
 	import {
-		setTileElement,
-		setDesktopElement,
-		onMouseDown,
-		onMouseMove,
-		onMouseUp,
-		onResizeMove,
-		onResizeUp,
-		handleMouseLeave
+	  setTileElement,
+	  setDesktopElement,
+	  onMouseDown,
+	  onMouseMove,
+	  onMouseUp,
+	  onResizeMove,
+	  onResizeUp,
+	  handleMouseLeave
 	} from './../window.svelte';
-
+  
 	let tile: HTMLDivElement;
 	let desktop: HTMLDivElement;
-
+  
 	onMount(() => {
-		setTileElement(tile);
-		setDesktopElement(desktop);
-
-
-
-		return () => {
-			window.removeEventListener('mousemove', onMouseMove);
-			window.removeEventListener('mouseup', onMouseUp);
-			window.removeEventListener('mousemove', onResizeMove);
-			window.removeEventListener('mouseup', onResizeUp);
-		};
+	  setTileElement(tile);
+	  setDesktopElement(desktop);
+  
+	  return () => {
+		window.removeEventListener('mousemove', onMouseMove);
+		window.removeEventListener('mouseup', onMouseUp);
+		window.removeEventListener('mousemove', onResizeMove);
+		window.removeEventListener('mouseup', onResizeUp);
+	  };
 	});
-</script>
-
-<div class="desktop" bind:this={desktop} on:mouseleave={handleMouseLeave}>
+  </script>
+  
+  <div class="desktop" bind:this={desktop} on:mouseleave={handleMouseLeave}>
 	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}>
-		<div class="titlebar">Title Bar</div>
-		<div class="body">Tile Body</div>
-		<div class="resize-handle" data-direction="top-left"></div>
-		<div class="resize-handle" data-direction="top-right"></div>
-		<div class="resize-handle" data-direction="bottom-left"></div>
-		<div class="resize-handle" data-direction="bottom-right"></div>
-		<div class="resize-handle" data-direction="top"></div>
-		<div class="resize-handle" data-direction="bottom"></div>
-		<div class="resize-handle" data-direction="left"></div>
-		<div class="resize-handle" data-direction="right"></div>
+	  <div class="titlebar">Title Bar</div>
+	  <div class="body">Tile Body</div>
+	  <div class="resize-handle" data-direction="top-left"></div>
+	  <div class="resize-handle" data-direction="top-right"></div>
+	  <div class="resize-handle" data-direction="bottom-left"></div>
+	  <div class="resize-handle" data-direction="bottom-right"></div>
+	  <div class="resize-handle" data-direction="top"></div>
+	  <div class="resize-handle" data-direction="bottom"></div>
+	  <div class="resize-handle" data-direction="left"></div>
+	  <div class="resize-handle" data-direction="right"></div>
 	</div>
-</div>
-
-<style>
+	<Taskbar />
+  </div>
+  
+  <style>
 	.desktop {
 	  width: 100%;
 	  height: 100vh;
