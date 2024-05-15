@@ -1,4 +1,3 @@
-// src/page.ts
 let isDragging = false;
 let isResizing = false;
 let startX: number, startY: number, initialX: number, initialY: number, initialWidth: number, initialHeight: number;
@@ -76,20 +75,60 @@ export function onResizeMove(event: MouseEvent) {
   const dx = event.clientX - startX;
   const dy = event.clientY - startY;
 
+  let newWidth = initialWidth;
+  let newHeight = initialHeight;
+  let newX = initialX;
+  let newY = initialY;
+
   if (resizeDirection.includes('right')) {
-    tile.style.width = `${initialWidth + dx}px`;
+    newWidth = initialWidth + dx;
   }
   if (resizeDirection.includes('bottom')) {
-    tile.style.height = `${initialHeight + dy}px`;
+    newHeight = initialHeight + dy;
   }
   if (resizeDirection.includes('left')) {
-    tile.style.width = `${initialWidth - dx}px`;
-    tile.style.left = `${initialX + dx}px`;
+    newWidth = initialWidth - dx;
+    newX = initialX + dx;
   }
   if (resizeDirection.includes('top')) {
-    tile.style.height = `${initialHeight - dy}px`;
-    tile.style.top = `${initialY + dy}px`;
+    newHeight = initialHeight - dy;
+    newY = initialY + dy;
   }
+
+  // Apply min and max width and height
+  const minWidth = 100;
+  const minHeight = 100;
+  const maxWidth = 500;
+  const maxHeight = 500;
+
+  if (newWidth < minWidth) {
+    newWidth = minWidth;
+    if (resizeDirection.includes('left')) {
+      newX = initialX + (initialWidth - minWidth);
+    }
+  } else if (newWidth > maxWidth) {
+    newWidth = maxWidth;
+    if (resizeDirection.includes('left')) {
+      newX = initialX + (initialWidth - maxWidth);
+    }
+  }
+
+  if (newHeight < minHeight) {
+    newHeight = minHeight;
+    if (resizeDirection.includes('top')) {
+      newY = initialY + (initialHeight - minHeight);
+    }
+  } else if (newHeight > maxHeight) {
+    newHeight = maxHeight;
+    if (resizeDirection.includes('top')) {
+      newY = initialY + (initialHeight - maxHeight);
+    }
+  }
+
+  tile.style.width = `${newWidth}px`;
+  tile.style.height = `${newHeight}px`;
+  tile.style.left = `${newX}px`;
+  tile.style.top = `${newY}px`;
 }
 
 export function onResizeUp() {
@@ -98,8 +137,6 @@ export function onResizeUp() {
   window.removeEventListener('mouseup', onResizeUp);
 }
 
-
 export const handleMouseLeave = () => {
-  //onMouseUp();
   onResizeUp();
 };
