@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Taskbar from './Taskbar.svelte'; // Adjust the path as necessary
+	import ResizeHandle from './ResizeHandle.svelte'; // Import the new component
 	import {
 	  setTileElement,
 	  setDesktopElement,
@@ -32,14 +33,14 @@
 	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}>
 	  <div class="titlebar">Title Bar</div>
 	  <div class="body">Tile Body</div>
-	  <div class="resize-handle" data-direction="top-left"></div>
-	  <div class="resize-handle" data-direction="top-right"></div>
-	  <div class="resize-handle" data-direction="bottom-left"></div>
-	  <div class="resize-handle" data-direction="bottom-right"></div>
-	  <div class="resize-handle" data-direction="top"></div>
-	  <div class="resize-handle" data-direction="bottom"></div>
-	  <div class="resize-handle" data-direction="left"></div>
-	  <div class="resize-handle" data-direction="right"></div>
+	  <ResizeHandle direction="top-left" />
+	  <ResizeHandle direction="top-right" />
+	  <ResizeHandle direction="bottom-left" />
+	  <ResizeHandle direction="bottom-right" />
+	  <ResizeHandle direction="top" />
+	  <ResizeHandle direction="bottom" />
+	  <ResizeHandle direction="left" />
+	  <ResizeHandle direction="right" />
 	</div>
 	<Taskbar />
   </div>
@@ -72,92 +73,5 @@
 	  width: 100%;
 	  height: 30px;
 	  background-color: #2980b9;
-	  cursor: grab;
-	  user-select: none; /* Prevent text selection while dragging */
-	}
-  
-	.titlebar:active {
-	  cursor: grabbing;
-	}
-  
-	.body {
-	  width: 100%;
-	  height: calc(100% - 30px);
-	  background-color: #ecf0f1;
-	  flex: 1;
-	}
-  
-	.resize-handle {
-	  position: absolute;
-	  background: transparent;
-	}
-  
-	.resize-handle:hover {
-	  background: #95a5a6;
-	}
-  
-	.resize-handle[data-direction*='top'] {
-	  top: -5px;
-	  height: 10px;
-	}
-  
-	.resize-handle[data-direction*='bottom'] {
-	  bottom: -5px;
-	  height: 10px;
-	}
-  
-	.resize-handle[data-direction*='left'] {
-	  left: -5px;
-	  width: 10px;
-	}
-  
-	.resize-handle[data-direction*='right'] {
-	  right: -5px;
-	  width: 10px;
-	}
-  
-	.resize-handle[data-direction='top-left'] {
-	  cursor: nwse-resize;
-	  width: 10px;
-	  height: 10px;
-	}
-  
-	.resize-handle[data-direction='top-right'] {
-	  cursor: nesw-resize;
-	  width: 10px;
-	  height: 10px;
-	}
-  
-	.resize-handle[data-direction='bottom-left'] {
-	  cursor: nesw-resize;
-	  width: 10px;
-	  height: 10px;
-	}
-  
-	.resize-handle[data-direction='bottom-right'] {
-	  cursor: nwse-resize;
-	  width: 10px;
-	  height: 10px;
-	}
-  
-	.resize-handle[data-direction='top'] {
-	  cursor: ns-resize;
-	  width: 100%;
-	}
-  
-	.resize-handle[data-direction='bottom'] {
-	  cursor: ns-resize;
-	  width: 100%;
-	}
-  
-	.resize-handle[data-direction='left'] {
-	  cursor: ew-resize;
-	  height: 100%;
-	}
-  
-	.resize-handle[data-direction='right'] {
-	  cursor: ew-resize;
-	  height: 100%;
-	}
-  </style>
+	  cu
   
