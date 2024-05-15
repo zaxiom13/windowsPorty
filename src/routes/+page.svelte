@@ -1,101 +1,83 @@
 <script lang="ts">
-
-	class Position{
-		x = 0
-		y = 0
-		constructor(x: number, y: number){
-			this.x = x
-			this.y = y
-		}
+	import { onMount } from 'svelte';
+  
+	let tile: HTMLDivElement;
+	let desktop: HTMLDivElement;
+	let isDragging = false;
+	let startX: number, startY: number, initialX: number, initialY: number;
+  
+	const onMouseDown = (event: MouseEvent) => {
+	  isDragging = true;
+	  startX = event.clientX;
+	  startY = event.clientY;
+	  initialX = tile.offsetLeft;
+	  initialY = tile.offsetTop;
+  
+	  event.preventDefault();
+	};
+  
+	const onMouseMove = (event: MouseEvent) => {
+	  if (!isDragging) return;
+  
+	  const dx = event.clientX - startX;
+	  const dy = event.clientY - startY;
+  
+	  let newX = initialX + dx;
+	  let newY = initialY + dy;
+  
+	  // Boundary conditions
+	  const rect = desktop.getBoundingClientRect();
+	  const tileRect = tile.getBoundingClientRect();
+  
+	  if (newX < 0) newX = 0;
+	  if (newY < 0) newY = 0;
+	  if (newX + tileRect.width > rect.width) newX = rect.width - tileRect.width;
+	  if (newY + tileRect.height > rect.height) newY = rect.height - tileRect.height;
+  
+	  tile.style.left = `${newX}px`;
+	  tile.style.top = `${newY}px`;
+	};
+  
+	const onMouseUp = () => {
+	  isDragging = false;
+	};
+  
+	onMount(() => {
+	  document.addEventListener('mousemove', onMouseMove);
+	  document.addEventListener('mouseup', onMouseUp);
+  
+	  return () => {
+		document.removeEventListener('mousemove', onMouseMove);
+		document.removeEventListener('mouseup', onMouseUp);
+	  };
+	});
+  </script>
+  
+  <style>
+	.desktop {
+	  width: 100%;
+	  height: 100vh;
+	  border: 1px solid #000;
+	  position: relative;
+	  overflow: hidden;
 	}
-
-	class Window {
-		windowPosition = $state(new Position(0,0))
-		width = $state(0)
-		height = $state(0)
-		isTitleBeingDragged = $state(false)
-		titleClickLocation = $state(new Position(0,0))
-		isBorderBeingDragged = $state(false)
-		borderClickLocation = $state(new Position(0,0))
-
-		constructor(){
-			this.windowPosition = new Position(10,10)
-			this.width = 100;
-			this.height = 150;
-		}
-
-		registerTitleDown = (e: MouseEvent) => {
-			this.isTitleBeingDragged = true
-			this.titleClickLocation = new Position(e.offsetX, e.offsetY)
-		}
-
-		registerBorderDown = (e: MouseEvent) => {
-
-			if (e.target !== e.currentTarget) return; // 
-			this.isBorderBeingDragged = true
-			this.borderClickLocation = new Position(e.offsetX, e.offsetY)	
-		}
-
-		registerMouseUp = (e: MouseEvent) => {
-			this.isTitleBeingDragged = false
-			this.isBorderBeingDragged = false
-		}
-
-		moveWindow = (e: MouseEvent) => {
-			if(this.isTitleBeingDragged){
-				this.windowPosition = new Position(
-					e.clientX - this.titleClickLocation.x,
-					e.clientY - this.titleClickLocation.y
-			)}
-			if(this.isBorderBeingDragged){
-				// check if the right or bottom border is being dragged
-				// if border click
-				
-		
-			}
-		}
-
+  
+	.tile {
+	  width: 100px;
+	  height: 100px;
+	  background-color: #3498db;
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  cursor: grab;
 	}
-
-	let window = new Window()
-
-</script>
-
-<svelte:document
-				 onmouseup={window.registerMouseUp}
-				 onmousemove={window.moveWindow}
-/>
-
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="outer-wrapper" onmousedown={window.registerBorderDown}
-style="position: absolute;
-	top:{window.windowPosition.y}px;
-	left:{window.windowPosition.x}px;
-	width:{window.width}px;
-	height:{window.height}px;">
-<div class="window" onmousedown={(e) =>e.stopPropagation()}>
-    
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="title" onmousedown={window.registerTitleDown}> 
-		Title
-	</div>
-</div>
-</div>
-<style>
-	.outer-wrapper{
-		width: 100%;
-		height: 100%;
-		background-color: green;
-		padding:10px;
+  
+	.tile:active {
+	  cursor: grabbing;
 	}
-	.window{
-		background-color: red;
-		height: 100%;
-	}
-	.title{
-		background-color: blue;
-		user-select: none;
-		height: 10%;
-	}
-</style>
+  </style>
+  
+  <div class="desktop" bind:this={desktop}>
+	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}></div>
+  </div>
+  
