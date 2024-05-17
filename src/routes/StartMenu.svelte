@@ -12,6 +12,7 @@
       border: 1px solid #ccc;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       display: none;
+      z-index: 10000;
   }
 
   .start-menu.visible {
