@@ -47,15 +47,21 @@ export class Tile {
             this.initialY = this.tile.offsetTop;
             this.resizeDirection = target.dataset.direction as string;
 
-            window.addEventListener('mousemove', this.onResizeMove.bind(this));
-            window.addEventListener('mouseup', this.onResizeUp.bind(this));
+            window.addEventListener('mousemove', this.onMouseMove.bind(this));
+            window.addEventListener('mouseup', this.onMouseUp.bind(this));
             event.preventDefault();
         }
     }
 
     private onMouseMove(event: MouseEvent) {
-        if (!this.isDragging) return;
+        if (this.isDragging) {
+            this.handleDragging(event);
+        } else if (this.isResizing) {
+            this.handleResizing(event);
+        }
+    }
 
+    private handleDragging(event: MouseEvent) {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
 
@@ -75,15 +81,7 @@ export class Tile {
         this.tile.style.top = `${newY}px`;
     }
 
-    private onMouseUp() {
-        this.isDragging = false;
-        window.removeEventListener('mousemove', this.onMouseMove.bind(this));
-        window.removeEventListener('mouseup', this.onMouseUp.bind(this));
-    }
-
-    private onResizeMove(event: MouseEvent) {
-        if (!this.isResizing) return;
-
+    private handleResizing(event: MouseEvent) {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
 
@@ -143,13 +141,10 @@ export class Tile {
         this.tile.style.top = `${newY}px`;
     }
 
-    private onResizeUp() {
+    private onMouseUp() {
+        this.isDragging = false;
         this.isResizing = false;
-        window.removeEventListener('mousemove', this.onResizeMove.bind(this));
-        window.removeEventListener('mouseup', this.onResizeUp.bind(this));
-    }
-
-    public handleMouseLeave() {
-        this.onResizeUp();
+        window.removeEventListener('mousemove', this.onMouseMove.bind(this));
+        window.removeEventListener('mouseup', this.onMouseUp.bind(this));
     }
 }
