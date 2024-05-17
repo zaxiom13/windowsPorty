@@ -28,12 +28,9 @@
 		tile.style.top = `${y}px`;
 	});
 
-	function handleMouseLeave() {
-		tileInstance?.handleMouseLeave();
-	}
 </script>
 
-<div class="tile" bind:this={tile} on:mouseleave={handleMouseLeave}>
+<div class="tile" bind:this={tile}>
 	<div class="titlebar">Title Bar</div>
 	<div class="body">Tile Body</div>
 	{#each directions as direction}
