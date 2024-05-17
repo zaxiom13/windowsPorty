@@ -12,8 +12,14 @@
 	let tileInstance: TileClass;
 
 	const directions = [
-		'top-left', 'top-right', 'bottom-left', 'bottom-right',
-		'top', 'bottom', 'left', 'right'
+		'top-left',
+		'top-right',
+		'bottom-left',
+		'bottom-right',
+		'top',
+		'bottom',
+		'left',
+		'right'
 	];
 
 	onMount(() => {

@@ -38,6 +38,7 @@
     padding: 0 10px;
     color: white;
     box-sizing: border-box;
+    z-index: 10000; /* Ensure it's always on top */
   }
 
   .start-button {
@@ -53,6 +54,7 @@
     background-color: #2980b9;
   }
 </style>
+
 
 <div class="taskbar">
   <button class="start-button" on:click={toggleStartMenu}>Start</button>
