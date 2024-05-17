@@ -68,8 +68,10 @@ routes
 ├── ResizeHandle.svelte
 ├── StartMenu.svelte
 ├── styles.css
-└── Taskbar.svelte
+├── Taskbar.svelte
+└── Tile.svelte
 ├── show_tree.sh
+├── Tile.ts
 └── window.svelte.ts
 
 =======================
@@ -126,93 +128,31 @@ File: +page.svelte
 =======================
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Taskbar from './Taskbar.svelte'; // Adjust the path as necessary
-	import ResizeHandle from './ResizeHandle.svelte'; // Import the new component
-	import {
-		setTileElement,
-		setDesktopElement,
-		onMouseDown,
-		onMouseMove,
-		onMouseUp,
-		onResizeMove,
-		onResizeUp,
-		handleMouseLeave
-	} from './../window.svelte';
-
-	let tile: HTMLDivElement;
+	import Taskbar from './Taskbar.svelte';
+	import Tile from './Tile.svelte';
+  
 	let desktop: HTMLDivElement;
-
-	const directions = [
-		'top-left',
-		'top-right',
-		'bottom-left',
-		'bottom-right',
-		'top',
-		'bottom',
-		'left',
-		'right'
-	];
-
+  
 	onMount(() => {
-		setTileElement(tile);
-		setDesktopElement(desktop);
-
-		return () => {
-			window.removeEventListener('mousemove', onMouseMove);
-			window.removeEventListener('mouseup', onMouseUp);
-			window.removeEventListener('mousemove', onResizeMove);
-			window.removeEventListener('mouseup', onResizeUp);
-		};
+	  // Additional setup if necessary
 	});
-</script>
-
-<div class="desktop" bind:this={desktop} on:mouseleave={handleMouseLeave}>
-	<div class="tile" bind:this={tile} on:mousedown={onMouseDown}>
-		<div class="titlebar">Title Bar</div>
-		<div class="body">Tile Body</div>
-		{#each directions as direction}
-			<ResizeHandle {direction} on:mousedown={onMouseDown} />
-		{/each}
-	</div>
+  </script>
+  
+  <div class="desktop" bind:this={desktop}>
+	<Tile {desktop} />
 	<Taskbar />
-</div>
-
-<style>
+  </div>
+  
+  <style>
 	.desktop {
-		width: 100%;
-		height: 100vh;
-		border: 1px solid #000;
-		position: relative;
-		overflow: hidden;
+	  width: 100%;
+	  height: 100vh;
+	  border: 1px solid #000;
+	  position: relative;
+	  overflow: hidden;
 	}
-
-	.tile {
-		width: 200px;
-		height: 200px;
-		background-color: #3498db;
-		position: absolute;
-		top: 0;
-		left: 0;
-		display: flex;
-		flex-direction: column;
-		min-width: 100px; /* Set minimum width */
-		min-height: 100px; /* Set minimum height */
-		max-width: 500px; /* Set maximum width */
-		max-height: 500px; /* Set maximum height */
-	}
-
-	.titlebar:active {
-		cursor: grabbing;
-	}
-
-	.body {
-		width: 100%;
-		height: calc(100% - 30px);
-		background-color: #ecf0f1;
-		flex: 1;
-	}
-</style>
-
+  </style>
+  
 =======================
 File: +page.ts
 =======================
@@ -224,90 +164,90 @@ export const prerender = true;
 File: ResizeHandle.svelte
 =======================
 <script lang="ts">
-    export let direction: string;
-  </script>
-  
-  <style>
-    .resize-handle {
-      position: absolute;
-      background: transparent;
-    }
-  
-    .resize-handle:hover {
-      background: #95a5a6;
-    }
-  
-    .resize-handle[data-direction*='top'] {
-      top: -5px;
-      height: 10px;
-    }
-  
-    .resize-handle[data-direction*='bottom'] {
-      bottom: -5px;
-      height: 10px;
-    }
-  
-    .resize-handle[data-direction*='left'] {
-      left: -5px;
-      width: 10px;
-    }
-  
-    .resize-handle[data-direction*='right'] {
-      right: -5px;
-      width: 10px;
-    }
-  
-    .resize-handle[data-direction='top-left'] {
-      cursor: nwse-resize;
-      width: 10px;
-      height: 10px;
-    }
-  
-    .resize-handle[data-direction='top-right'] {
-      cursor: nesw-resize;
-      width: 10px;
-      height: 10px;
-    }
-  
-    .resize-handle[data-direction='bottom-left'] {
-      cursor: nesw-resize;
-      width: 10px;
-      height: 10px;
-    }
-  
-    .resize-handle[data-direction='bottom-right'] {
-      cursor: nwse-resize;
-      width: 10px;
-      height: 10px;
-    }
-  
-    .resize-handle[data-direction='top'] {
-      cursor: ns-resize;
-      width: 100%;
-    }
-  
-    .resize-handle[data-direction='bottom'] {
-      cursor: ns-resize;
-      width: 100%;
-    }
-  
-    .resize-handle[data-direction='left'] {
-      cursor: ew-resize;
-      height: 100%;
-    }
-  
-    .resize-handle[data-direction='right'] {
-      cursor: ew-resize;
-      height: 100%;
-    }
-  </style>
-  
-  <div
-    class="resize-handle"
-    data-direction={direction}
-    on:mousedown
-  ></div>
-  
+  export let direction: string;
+</script>
+
+<style>
+  .resize-handle {
+    position: absolute;
+    background: transparent;
+  }
+
+  .resize-handle:hover {
+    background: #95a5a6;
+  }
+
+  .resize-handle[data-direction*='top'] {
+    top: -5px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction*='bottom'] {
+    bottom: -5px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction*='left'] {
+    left: -5px;
+    width: 10px;
+  }
+
+  .resize-handle[data-direction*='right'] {
+    right: -5px;
+    width: 10px;
+  }
+
+  .resize-handle[data-direction='top-left'] {
+    cursor: nwse-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='top-right'] {
+    cursor: nesw-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='bottom-left'] {
+    cursor: nesw-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='bottom-right'] {
+    cursor: nwse-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='top'] {
+    cursor: ns-resize;
+    width: 100%;
+  }
+
+  .resize-handle[data-direction='bottom'] {
+    cursor: ns-resize;
+    width: 100%;
+  }
+
+  .resize-handle[data-direction='left'] {
+    cursor: ew-resize;
+    height: 100%;
+  }
+
+  .resize-handle[data-direction='right'] {
+    cursor: ew-resize;
+    height: 100%;
+  }
+</style>
+
+<div
+  class="resize-handle"
+  data-direction={direction}
+  on:mousedown
+></div>
+
 =======================
 File: StartMenu.svelte
 =======================
@@ -418,6 +358,74 @@ File: Taskbar.svelte
 <StartMenu visible={isStartMenuVisible} />
 
 =======================
+File: Tile.svelte
+=======================
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import ResizeHandle from './ResizeHandle.svelte';
+	import { Tile as TileClass } from './../Tile';
+  
+	export let desktop: HTMLDivElement;
+	let tile: HTMLDivElement;
+	let tileInstance: TileClass;
+  
+	const directions = [
+	  'top-left',
+	  'top-right',
+	  'bottom-left',
+	  'bottom-right',
+	  'top',
+	  'bottom',
+	  'left',
+	  'right'
+	];
+  
+	onMount(() => {
+	  tileInstance = new TileClass(tile, desktop);
+	});
+  
+	function handleMouseLeave() {
+	  tileInstance?.handleMouseLeave();
+	}
+  </script>
+  
+  <div class="tile" bind:this={tile} on:mouseleave={handleMouseLeave}>
+	<div class="titlebar">Title Bar</div>
+	<div class="body">Tile Body</div>
+	{#each directions as direction}
+	  <ResizeHandle {direction} />
+	{/each}
+  </div>
+  
+  <style>
+	.tile {
+	  width: 200px;
+	  height: 200px;
+	  background-color: #3498db;
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  display: flex;
+	  flex-direction: column;
+	  min-width: 100px;
+	  min-height: 100px;
+	  max-width: 500px;
+	  max-height: 500px;
+	}
+  
+	.titlebar:active {
+	  cursor: grabbing;
+	}
+  
+	.body {
+	  width: 100%;
+	  height: calc(100% - 30px);
+	  background-color: #ecf0f1;
+	  flex: 1;
+	}
+  </style>
+  
+=======================
 File: show_tree.sh
 =======================
 #!/bin/bash
@@ -471,148 +479,162 @@ print_tree "." "" true
 echo "Directory structure has been written to $output_file"
 
 =======================
+File: Tile.ts
+=======================
+export class Tile {
+    private tile: HTMLDivElement;
+    private desktop: HTMLDivElement;
+    private isDragging: boolean = false;
+    private isResizing: boolean = false;
+    private startX!: number;
+    private startY!: number;
+    private initialX!: number;
+    private initialY!: number;
+    private initialWidth!: number;
+    private initialHeight!: number;
+    private resizeDirection!: string;
+  
+    constructor(tile: HTMLDivElement, desktop: HTMLDivElement) {
+      this.tile = tile;
+      this.desktop = desktop;
+      this.initializeEventListeners();
+    }
+  
+    private initializeEventListeners() {
+      this.tile.addEventListener('mousedown', this.onMouseDown.bind(this));
+    }
+  
+    private onMouseDown(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('titlebar')) {
+        this.isDragging = true;
+        this.startX = event.clientX;
+        this.startY = event.clientY;
+        this.initialX = this.tile.offsetLeft;
+        this.initialY = this.tile.offsetTop;
+  
+        window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('mouseup', this.onMouseUp.bind(this));
+        event.preventDefault();
+      } else if (target.classList.contains('resize-handle')) {
+        this.isResizing = true;
+        this.startX = event.clientX;
+        this.startY = event.clientY;
+        this.initialWidth = this.tile.clientWidth;
+        this.initialHeight = this.tile.clientHeight;
+        this.initialX = this.tile.offsetLeft;
+        this.initialY = this.tile.offsetTop;
+        this.resizeDirection = target.dataset.direction as string;
+  
+        window.addEventListener('mousemove', this.onResizeMove.bind(this));
+        window.addEventListener('mouseup', this.onResizeUp.bind(this));
+        event.preventDefault();
+      }
+    }
+  
+    private onMouseMove(event: MouseEvent) {
+      if (!this.isDragging) return;
+  
+      const dx = event.clientX - this.startX;
+      const dy = event.clientY - this.startY;
+  
+      let newX = this.initialX + dx;
+      let newY = this.initialY + dy;
+  
+      // Boundary conditions
+      const rect = this.desktop.getBoundingClientRect();
+      const tileRect = this.tile.getBoundingClientRect();
+  
+      if (newX < 0) newX = 0;
+      if (newY < 0) newY = 0;
+      if (newX + tileRect.width > rect.width) newX = rect.width - tileRect.width;
+      if (newY + tileRect.height > rect.height) newY = rect.height - tileRect.height;
+  
+      this.tile.style.left = `${newX}px`;
+      this.tile.style.top = `${newY}px`;
+    }
+  
+    private onMouseUp() {
+      this.isDragging = false;
+      window.removeEventListener('mousemove', this.onMouseMove.bind(this));
+      window.removeEventListener('mouseup', this.onMouseUp.bind(this));
+    }
+  
+    private onResizeMove(event: MouseEvent) {
+      if (!this.isResizing) return;
+  
+      const dx = event.clientX - this.startX;
+      const dy = event.clientY - this.startY;
+  
+      let newWidth = this.initialWidth;
+      let newHeight = this.initialHeight;
+      let newX = this.initialX;
+      let newY = this.initialY;
+  
+      if (this.resizeDirection.includes('right')) {
+        newWidth = this.initialWidth + dx;
+      }
+      if (this.resizeDirection.includes('bottom')) {
+        newHeight = this.initialHeight + dy;
+      }
+      if (this.resizeDirection.includes('left')) {
+        newWidth = this.initialWidth - dx;
+        newX = this.initialX + dx;
+      }
+      if (this.resizeDirection.includes('top')) {
+        newHeight = this.initialHeight - dy;
+        newY = this.initialY + dy;
+      }
+  
+      // Apply min and max width and height
+      const minWidth = 100;
+      const minHeight = 100;
+      const maxWidth = 500;
+      const maxHeight = 500;
+  
+      if (newWidth < minWidth) {
+        newWidth = minWidth;
+        if (this.resizeDirection.includes('left')) {
+          newX = this.initialX + (this.initialWidth - minWidth);
+        }
+      } else if (newWidth > maxWidth) {
+        newWidth = maxWidth;
+        if (this.resizeDirection.includes('left')) {
+          newX = this.initialX + (this.initialWidth - maxWidth);
+        }
+      }
+  
+      if (newHeight < minHeight) {
+        newHeight = minHeight;
+        if (this.resizeDirection.includes('top')) {
+          newY = this.initialY + (this.initialHeight - minHeight);
+        }
+      } else if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        if (this.resizeDirection.includes('top')) {
+          newY = this.initialY + (this.initialHeight - maxHeight);
+        }
+      }
+  
+      this.tile.style.width = `${newWidth}px`;
+      this.tile.style.height = `${newHeight}px`;
+      this.tile.style.left = `${newX}px`;
+      this.tile.style.top = `${newY}px`;
+    }
+  
+    private onResizeUp() {
+      this.isResizing = false;
+      window.removeEventListener('mousemove', this.onResizeMove.bind(this));
+      window.removeEventListener('mouseup', this.onResizeUp.bind(this));
+    }
+  
+    public handleMouseLeave() {
+      this.onResizeUp();
+    }
+  }
+  
+=======================
 File: window.svelte.ts
 =======================
-let isDragging = false;
-let isResizing = false;
-let startX: number, startY: number, initialX: number, initialY: number, initialWidth: number, initialHeight: number;
-let tile: HTMLDivElement;
-let desktop: HTMLDivElement;
-let resizeDirection: string;
-
-export function setTileElement(element: HTMLDivElement) {
-  tile = element;
-}
-
-export function setDesktopElement(element: HTMLDivElement) {
-  desktop = element;
-}
-
-export function onMouseDown(event: MouseEvent) {
-  const target = event.target as HTMLElement;
-  if (target.classList.contains('titlebar')) {
-    isDragging = true;
-    startX = event.clientX;
-    startY = event.clientY;
-    initialX = tile.offsetLeft;
-    initialY = tile.offsetTop;
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    event.preventDefault();
-  } else if (target.classList.contains('resize-handle')) {
-    isResizing = true;
-    startX = event.clientX;
-    startY = event.clientY;
-    initialWidth = tile.clientWidth;
-    initialHeight = tile.clientHeight;
-    initialX = tile.offsetLeft;
-    initialY = tile.offsetTop;
-    resizeDirection = target.dataset.direction as string;
-
-    window.addEventListener('mousemove', onResizeMove);
-    window.addEventListener('mouseup', onResizeUp);
-    event.preventDefault();
-  }
-}
-
-export function onMouseMove(event: MouseEvent) {
-  if (!isDragging) return;
-
-  const dx = event.clientX - startX;
-  const dy = event.clientY - startY;
-
-  let newX = initialX + dx;
-  let newY = initialY + dy;
-
-  // Boundary conditions
-  const rect = desktop.getBoundingClientRect();
-  const tileRect = tile.getBoundingClientRect();
-
-  if (newX < 0) newX = 0;
-  if (newY < 0) newY = 0;
-  if (newX + tileRect.width > rect.width) newX = rect.width - tileRect.width;
-  if (newY + tileRect.height > rect.height) newY = rect.height - tileRect.height;
-
-  tile.style.left = `${newX}px`;
-  tile.style.top = `${newY}px`;
-}
-
-export function onMouseUp() {
-  isDragging = false;
-  window.removeEventListener('mousemove', onMouseMove);
-  window.removeEventListener('mouseup', onMouseUp);
-}
-
-export function onResizeMove(event: MouseEvent) {
-  if (!isResizing) return;
-
-  const dx = event.clientX - startX;
-  const dy = event.clientY - startY;
-
-  let newWidth = initialWidth;
-  let newHeight = initialHeight;
-  let newX = initialX;
-  let newY = initialY;
-
-  if (resizeDirection.includes('right')) {
-    newWidth = initialWidth + dx;
-  }
-  if (resizeDirection.includes('bottom')) {
-    newHeight = initialHeight + dy;
-  }
-  if (resizeDirection.includes('left')) {
-    newWidth = initialWidth - dx;
-    newX = initialX + dx;
-  }
-  if (resizeDirection.includes('top')) {
-    newHeight = initialHeight - dy;
-    newY = initialY + dy;
-  }
-
-  // Apply min and max width and height
-  const minWidth = 100;
-  const minHeight = 100;
-  const maxWidth = 500;
-  const maxHeight = 500;
-
-  if (newWidth < minWidth) {
-    newWidth = minWidth;
-    if (resizeDirection.includes('left')) {
-      newX = initialX + (initialWidth - minWidth);
-    }
-  } else if (newWidth > maxWidth) {
-    newWidth = maxWidth;
-    if (resizeDirection.includes('left')) {
-      newX = initialX + (initialWidth - maxWidth);
-    }
-  }
-
-  if (newHeight < minHeight) {
-    newHeight = minHeight;
-    if (resizeDirection.includes('top')) {
-      newY = initialY + (initialHeight - minHeight);
-    }
-  } else if (newHeight > maxHeight) {
-    newHeight = maxHeight;
-    if (resizeDirection.includes('top')) {
-      newY = initialY + (initialHeight - maxHeight);
-    }
-  }
-
-  tile.style.width = `${newWidth}px`;
-  tile.style.height = `${newHeight}px`;
-  tile.style.left = `${newX}px`;
-  tile.style.top = `${newY}px`;
-}
-
-export function onResizeUp() {
-  isResizing = false;
-  window.removeEventListener('mousemove', onResizeMove);
-  window.removeEventListener('mouseup', onResizeUp);
-}
-
-export const handleMouseLeave = () => {
-  onResizeUp();
-};
+export { Tile } from './Tile';
 
