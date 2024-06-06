@@ -52,6 +52,7 @@
 		min-height: 100px;
 		max-width: 500px;
 		max-height: 500px;
+		user-select: none;
 	}
 
 	.titlebar:active {

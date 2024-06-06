@@ -26,6 +26,19 @@ export class Tile {
 
     private onMouseDown(event: MouseEvent) {
         tileManager.bringToFront(this.tile);  // Bring this tile to the front on interaction
+        const allTiles = document.querySelectorAll('.tile');
+        allTiles.forEach(tile => {
+            const titlebar = tile.querySelector('.titlebar') as HTMLElement;
+            if (titlebar) {
+                titlebar.style.backgroundColor = '#3498db'; // Default color
+            }
+        });
+
+        // Set the 'active' state (darker titlebar) for this tile
+        const titlebar = this.tile.querySelector('.titlebar') as HTMLElement;
+        if (titlebar) {
+            titlebar.style.backgroundColor = '#2980b9'; // Darker color
+        }
         const target = event.target as HTMLElement;
         if (target.classList.contains('titlebar')) {
             this.isDragging = true;
