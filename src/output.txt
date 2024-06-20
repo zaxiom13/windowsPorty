@@ -132,52 +132,69 @@ File: +page.svelte
 	import Tile from './Tile.svelte';
 
 	let desktop: HTMLDivElement;
-	let tiles: Array<{ id: number, x: number, y: number }> = [];
+	let tiles: Array<{ id: number, x: number, y: number, title: string, isFocused: boolean }> = [];
 	let nextTileId = 0;
 
 	onMount(() => {
-		// Add initial tiles if necessary
-		addTile();
+		// No initial tiles
 	});
 
-	function addTile() {
-		tiles = [...tiles, { id: nextTileId++, x: 50, y: 50 }];
+	function addTile(title: string) {
+		const desktopRect = desktop.getBoundingClientRect();
+		const tileWidth = 300;
+		const tileHeight = 200;
+
+		// Calculate random position
+		const maxX = desktopRect.width - tileWidth;
+		const maxY = desktopRect.height - tileHeight - 28; // Subtract taskbar height
+		const x = Math.floor(Math.random() * maxX);
+		const y = Math.floor(Math.random() * maxY);
+
+		const newTile = { id: nextTileId++, x, y, title, isFocused: true };
+		tiles = tiles.map(tile => ({ ...tile, isFocused: false }));
+		tiles = [...tiles, newTile];
+	}
+
+	function handleStartMenuItemClick(item: string) {
+		addTile(item);
+	}
+
+	function focusTile(id: number) {
+		tiles = tiles.map(tile => ({
+			...tile,
+			isFocused: tile.id === id
+		}));
 	}
 </script>
 
 <div class="desktop" bind:this={desktop}>
-	{#each tiles as tile}
-		<Tile {desktop} id={tile.id} x={tile.x} y={tile.y} />
+	{#each tiles as tile (tile.id)}
+		<Tile 
+			{desktop} 
+			id={tile.id} 
+			x={tile.x} 
+			y={tile.y} 
+			title={tile.title}
+			isFocused={tile.isFocused}
+			on:focus={(event) => focusTile(event.detail)}
+		/>
 	{/each}
-	<Taskbar />
-	<button class="add-tile-button" on:click={addTile}>Add Tile</button>
+	<Taskbar 
+		on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
+		on:focusWindow={(event) => focusTile(event.detail)}
+		openWindows={tiles}
+	/>
 </div>
 
 <style>
 	.desktop {
 		width: 100%;
 		height: 100vh;
-		border: 1px solid #000;
+		background-color: #008080;
 		position: relative;
 		overflow: hidden;
 	}
-	.add-tile-button {
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		z-index: 10;
-		background-color: #3498db;
-		color: white;
-		border: none;
-		padding: 10px;
-		cursor: pointer;
-		border-radius: 5px;
-	}
-	.add-tile-button:hover {
-		background-color: #2980b9;
-	}
 </style>
-
 =======================
 File: +page.ts
 =======================
@@ -277,43 +294,64 @@ File: ResizeHandle.svelte
 File: StartMenu.svelte
 =======================
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
   export let visible: boolean = false;
+
+  const dispatch = createEventDispatcher();
+
+  const menuItems = [
+    "Programs",
+    "Documents",
+    "Settings",
+    "Find",
+    "Help",
+    "Run...",
+    "Log Off...",
+    "Shut Down..."
+  ];
+
+  function handleItemClick(item: string) {
+    dispatch('menuItemClick', item);
+  }
 </script>
 
 <style>
   .start-menu {
-      position: absolute;
-      bottom: 40px; /* Adjust based on the height of the taskbar */
-      left: 10px;
-      width: 200px;
-      background-color: white;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      display: none;
-      z-index: 10000;
+    position: absolute;
+    bottom: 28px;
+    left: 2px;
+    width: 200px;
+    background-color: #D4D0C8;
+    border: 2px solid #808080;
+    border-bottom: none;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    display: none;
+    z-index: 10001;
   }
 
   .start-menu.visible {
-      display: block;
+    display: block;
   }
 
-  .start-menu div {
-      padding: 10px;
-      cursor: pointer;
+  .menu-item {
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 11px;
   }
 
-  .start-menu div:hover {
-      background-color: #f0f0f0;
+  .menu-item:hover {
+    background-color: #000080;
+    color: white;
   }
 </style>
 
 <div class="start-menu {visible ? 'visible' : ''}">
-  <!-- Start menu content goes here -->
-  <div>Item 1</div>
-  <div>Item 2</div>
-  <div>Item 3</div>
+  {#each menuItems as item}
+    <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
+  {/each}
 </div>
-
 =======================
 File: styles.css
 =======================
@@ -322,8 +360,12 @@ File: styles.css
 File: Taskbar.svelte
 =======================
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import StartMenu from './StartMenu.svelte';
+
+  const dispatch = createEventDispatcher();
+
+  export let openWindows: Array<{ id: number, title: string, isFocused: boolean }> = [];
 
   let isStartMenuVisible: boolean = false;
 
@@ -340,6 +382,15 @@ File: Taskbar.svelte
     }
   }
 
+  function handleMenuItemClick(item: string) {
+    dispatch('menuItemClick', item);
+    isStartMenuVisible = false;
+  }
+
+  function focusWindow(id: number) {
+    dispatch('focusWindow', id);
+  }
+
   onMount((): () => void => {
     document.addEventListener('click', handleClickOutside);
     return () => {
@@ -353,43 +404,101 @@ File: Taskbar.svelte
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 40px;
-    background-color: #2c3e50;
+    height: 28px;
+    background-color: #D4D0C8;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 10px;
-    color: white;
+    padding: 0 2px;
+    border-top: 2px solid #ffffff;
     box-sizing: border-box;
-    z-index: 10000; /* Ensure it's always on top */
+    z-index: 10000;
   }
 
   .start-button {
-    background-color: #3498db;
-    border: none;
+    background: linear-gradient(to bottom, #1fdf25, #0a9710);
+    border: 2px solid #ffffff;
+    border-right-color: #808080;
+    border-bottom-color: #808080;
     color: white;
-    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 2px 5px;
     cursor: pointer;
-    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    height: 22px;
+    margin-right: 4px;
   }
 
-  .start-button:hover {
-    background-color: #2980b9;
+  .start-button:before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #008080;
+    margin-right: 4px;
+  }
+
+  .start-button:active {
+    border: 2px solid #808080;
+    border-right-color: #ffffff;
+    border-bottom-color: #ffffff;
+  }
+
+  .window-tabs {
+    display: flex;
+    flex-grow: 1;
+    overflow-x: auto;
+    height: 100%;
+  }
+
+  .window-tab {
+    background-color: #D4D0C8;
+    border: 1px solid #808080;
+    border-bottom: none;
+    padding: 2px 8px;
+    margin-right: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 11px;
+  }
+
+  .window-tab.focused {
+    background-color: #ffffff;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #808080;
   }
 </style>
 
-
 <div class="taskbar">
   <button class="start-button" on:click={toggleStartMenu}>Start</button>
+  <div class="window-tabs">
+    {#each openWindows as window (window.id)}
+      <div 
+        class="window-tab" 
+        class:focused={window.isFocused}
+        on:click={() => focusWindow(window.id)}
+      >
+        {window.title}
+      </div>
+    {/each}
+  </div>
 </div>
 
-<StartMenu visible={isStartMenuVisible} />
-
+<StartMenu visible={isStartMenuVisible} on:menuItemClick={(event) => handleMenuItemClick(event.detail)} />
 =======================
 File: Tile.svelte
 =======================
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import ResizeHandle from './ResizeHandle.svelte';
 	import { Tile as TileClass } from './../Tile';
 
@@ -397,6 +506,10 @@ File: Tile.svelte
 	export let id: number;
 	export let x: number = 0;
 	export let y: number = 0;
+	export let title: string;
+	export let isFocused: boolean = false;
+
+	const dispatch = createEventDispatcher();
 
 	let tile: HTMLDivElement;
 	let tileInstance: TileClass;
@@ -418,11 +531,21 @@ File: Tile.svelte
 		tile.style.top = `${y}px`;
 	});
 
+	function focus() {
+		dispatch('focus', id);
+	}
 </script>
 
-<div class="tile" bind:this={tile}>
-	<div class="titlebar">Title Bar</div>
-	<div class="body">Tile Body</div>
+<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={focus}>
+	<div class="titlebar" class:focused={isFocused}>
+		<div class="title">{title}</div>
+		<div class="buttons">
+			<button class="minimize">_</button>
+			<button class="maximize">□</button>
+			<button class="close">X</button>
+		</div>
+	</div>
+	<div class="body">Window Content for {title}</div>
 	{#each directions as direction}
 		<ResizeHandle {direction} />
 	{/each}
@@ -430,9 +553,9 @@ File: Tile.svelte
 
 <style>
 	.tile {
-		width: 200px;
+		width: 300px;
 		height: 200px;
-		background-color: #3498db;
+		background-color: #D4D0C8;
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -443,20 +566,67 @@ File: Tile.svelte
 		max-width: 500px;
 		max-height: 500px;
 		user-select: none;
+		border: 2px solid #ffffff;
+		border-right-color: #808080;
+		border-bottom-color: #808080;
+		box-shadow: 1px 1px 0 #000000;
+	}
+
+	.titlebar {
+		height: 18px;
+		background: linear-gradient(to right, #7b7b7b, #a8a8a8);
+		color: #d8d8d8;
+		font-weight: bold;
+		font-size: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 2px 3px;
+	}
+
+	.titlebar.focused {
+		background: linear-gradient(to right, #000080, #1084d0);
+		color: white;
 	}
 
 	.titlebar:active {
 		cursor: grabbing;
 	}
 
+	.buttons {
+		display: flex;
+	}
+
+	.buttons button {
+		width: 16px;
+		height: 14px;
+		margin-left: 2px;
+		border: 1px solid #ffffff;
+		background-color: #D4D0C8;
+		color: #000000;
+		font-size: 9px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+
 	.body {
 		width: 100%;
-		height: calc(100% - 30px);
-		background-color: #ecf0f1;
+		height: calc(100% - 22px);
+		background-color: #ffffff;
 		flex: 1;
+		border: 1px solid #808080;
+		border-top-color: #ffffff;
+		padding: 2px;
+		font-family: 'Tahoma', sans-serif;
+		font-size: 11px;
+	}
+
+	.focused {
+		z-index: 100;
 	}
 </style>
-
 =======================
 File: show_tree.sh
 =======================
@@ -540,20 +710,7 @@ export class Tile {
     }
 
     private onMouseDown(event: MouseEvent) {
-        tileManager.bringToFront(this.tile);  // Bring this tile to the front on interaction
-        const allTiles = document.querySelectorAll('.tile');
-        allTiles.forEach(tile => {
-            const titlebar = tile.querySelector('.titlebar') as HTMLElement;
-            if (titlebar) {
-                titlebar.style.backgroundColor = '#3498db'; // Default color
-            }
-        });
-
-        // Set the 'active' state (darker titlebar) for this tile
-        const titlebar = this.tile.querySelector('.titlebar') as HTMLElement;
-        if (titlebar) {
-            titlebar.style.backgroundColor = '#2980b9'; // Darker color
-        }
+        tileManager.bringToFront(this.tile);
         const target = event.target as HTMLElement;
         if (target.classList.contains('titlebar')) {
             this.isDragging = true;
@@ -596,14 +753,11 @@ export class Tile {
         let newX = this.initialX + dx;
         let newY = this.initialY + dy;
 
-        // Boundary conditions
-        const rect = this.desktop.getBoundingClientRect();
+        const desktopRect = this.desktop.getBoundingClientRect();
         const tileRect = this.tile.getBoundingClientRect();
 
-        if (newX < 0) newX = 0;
-        if (newY < 0) newY = 0;
-        if (newX + tileRect.width > rect.width) newX = rect.width - tileRect.width;
-        if (newY + tileRect.height > rect.height) newY = rect.height - tileRect.height;
+        newX = Math.max(0, Math.min(newX, desktopRect.width - tileRect.width));
+        newY = Math.max(0, Math.min(newY, desktopRect.height - tileRect.height));
 
         this.tile.style.left = `${newX}px`;
         this.tile.style.top = `${newY}px`;
@@ -613,54 +767,50 @@ export class Tile {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
 
+        const desktopRect = this.desktop.getBoundingClientRect();
+        const minWidth = 100;
+        const minHeight = 100;
+        const maxWidth = 500;
+        const maxHeight = 500;
+
         let newWidth = this.initialWidth;
         let newHeight = this.initialHeight;
         let newX = this.initialX;
         let newY = this.initialY;
 
         if (this.resizeDirection.includes('right')) {
-            newWidth = this.initialWidth + dx;
+            newWidth = Math.min(
+                Math.max(minWidth, this.initialWidth + dx),
+                desktopRect.width - this.initialX,
+                maxWidth
+            );
         }
         if (this.resizeDirection.includes('bottom')) {
-            newHeight = this.initialHeight + dy;
+            newHeight = Math.min(
+                Math.max(minHeight, this.initialHeight + dy),
+                desktopRect.height - this.initialY,
+                maxHeight
+            );
         }
         if (this.resizeDirection.includes('left')) {
-            newWidth = this.initialWidth - dx;
-            newX = this.initialX + dx;
+            const maxLeftResize = this.initialX + this.initialWidth - minWidth;
+            const leftResize = Math.min(dx, maxLeftResize);
+            newWidth = Math.min(
+                Math.max(minWidth, this.initialWidth - leftResize),
+                maxWidth,
+                this.initialX + this.initialWidth
+            );
+            newX = Math.max(0, Math.min(this.initialX + dx, this.initialX + this.initialWidth - minWidth));
         }
         if (this.resizeDirection.includes('top')) {
-            newHeight = this.initialHeight - dy;
-            newY = this.initialY + dy;
-        }
-
-        // Apply min and max width and height
-        const minWidth = 100;
-        const minHeight = 100;
-        const maxWidth = 500;
-        const maxHeight = 500;
-
-        if (newWidth < minWidth) {
-            newWidth = minWidth;
-            if (this.resizeDirection.includes('left')) {
-                newX = this.initialX + (this.initialWidth - minWidth);
-            }
-        } else if (newWidth > maxWidth) {
-            newWidth = maxWidth;
-            if (this.resizeDirection.includes('left')) {
-                newX = this.initialX + (this.initialWidth - maxWidth);
-            }
-        }
-
-        if (newHeight < minHeight) {
-            newHeight = minHeight;
-            if (this.resizeDirection.includes('top')) {
-                newY = this.initialY + (this.initialHeight - minHeight);
-            }
-        } else if (newHeight > maxHeight) {
-            newHeight = maxHeight;
-            if (this.resizeDirection.includes('top')) {
-                newY = this.initialY + (this.initialHeight - maxHeight);
-            }
+            const maxTopResize = this.initialY + this.initialHeight - minHeight;
+            const topResize = Math.min(dy, maxTopResize);
+            newHeight = Math.min(
+                Math.max(minHeight, this.initialHeight - topResize),
+                maxHeight,
+                this.initialY + this.initialHeight
+            );
+            newY = Math.max(0, Math.min(this.initialY + dy, this.initialY + this.initialHeight - minHeight));
         }
 
         this.tile.style.width = `${newWidth}px`;
@@ -676,7 +826,6 @@ export class Tile {
         window.removeEventListener('mouseup', this.onMouseUp.bind(this));
     }
 }
-
 =======================
 File: TileManager.ts
 =======================
