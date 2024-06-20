@@ -27,17 +27,24 @@
 	];
 
 	onMount(() => {
-		tileInstance = new TileClass(tile, desktop);
+		tileInstance = new TileClass(tile, desktop, () => {
+			isFocused = true;
+			dispatch('focus', id);
+		});
 		tile.style.left = `${x}px`;
 		tile.style.top = `${y}px`;
 	});
 
-	function focus() {
-		dispatch('focus', id);
+	function handleMouseDown(event: MouseEvent) {
+		const titlebar = tile.querySelector('.titlebar');
+		if (titlebar && titlebar.contains(event.target as Node)) {
+			tileInstance.startDragging(event);
+		}
+		tileInstance.focus();
 	}
 </script>
 
-<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={focus}>
+<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={handleMouseDown}>
 	<div class="titlebar" class:focused={isFocused}>
 		<div class="title">{title}</div>
 		<div class="buttons">
@@ -83,15 +90,12 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 2px 3px;
+		cursor: move;
 	}
 
 	.titlebar.focused {
 		background: linear-gradient(to right, #000080, #1084d0);
 		color: white;
-	}
-
-	.titlebar:active {
-		cursor: grabbing;
 	}
 
 	.buttons {

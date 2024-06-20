@@ -12,10 +12,12 @@ export class Tile {
     private initialWidth!: number;
     private initialHeight!: number;
     private resizeDirection!: string;
+    private onFocus: () => void;
 
-    constructor(tile: HTMLDivElement, desktop: HTMLDivElement) {
+    constructor(tile: HTMLDivElement, desktop: HTMLDivElement, onFocus: () => void) {
         this.tile = tile;
         this.desktop = desktop;
+        this.onFocus = onFocus;
         tileManager.registerTile(this.tile);
         this.initializeEventListeners();
     }
@@ -24,20 +26,27 @@ export class Tile {
         this.tile.addEventListener('mousedown', this.onMouseDown.bind(this));
     }
 
-    private onMouseDown(event: MouseEvent) {
-        tileManager.bringToFront(this.tile);
-        const target = event.target as HTMLElement;
-        if (target.classList.contains('titlebar')) {
-            this.isDragging = true;
-            this.startX = event.clientX;
-            this.startY = event.clientY;
-            this.initialX = this.tile.offsetLeft;
-            this.initialY = this.tile.offsetTop;
+    public startDragging(event: MouseEvent) {
+        this.isDragging = true;
+        this.startX = event.clientX;
+        this.startY = event.clientY;
+        this.initialX = this.tile.offsetLeft;
+        this.initialY = this.tile.offsetTop;
 
-            window.addEventListener('mousemove', this.onMouseMove.bind(this));
-            window.addEventListener('mouseup', this.onMouseUp.bind(this));
-            event.preventDefault();
-        } else if (target.classList.contains('resize-handle')) {
+        window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('mouseup', this.onMouseUp.bind(this));
+        event.preventDefault();
+    }
+
+    public focus() {
+        tileManager.bringToFront(this.tile);
+        this.onFocus();
+    }
+
+    private onMouseDown(event: MouseEvent) {
+        this.focus();
+        const target = event.target as HTMLElement;
+        if (target.classList.contains('resize-handle')) {
             this.isResizing = true;
             this.startX = event.clientX;
             this.startY = event.clientY;
