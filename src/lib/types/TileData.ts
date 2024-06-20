@@ -1,8 +1,9 @@
 export interface TileData {
-	id: number;
-	x: number;
-	y: number;
-	title: string;
-	isFocused: boolean;
-	isMinimized: boolean;
+    id: number;
+    x: number;
+    y: number;
+    title: string;
+    isFocused: boolean;
+    isMinimized: boolean;
+    zIndex: number;
 }
