@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import StartMenu from './StartMenu.svelte';
+
+  const dispatch = createEventDispatcher();
 
   let isStartMenuVisible: boolean = false;
 
@@ -15,6 +17,11 @@
     if (startMenu && startButton && !startButton.contains(event.target as Node)) {
       isStartMenuVisible = false;
     }
+  }
+
+  function handleMenuItemClick(item: string) {
+    dispatch('menuItemClick', item);
+    isStartMenuVisible = false;
   }
 
   onMount((): () => void => {
@@ -75,4 +82,4 @@
   <button class="start-button" on:click={toggleStartMenu}>Start</button>
 </div>
 
-<StartMenu visible={isStartMenuVisible} />
+<StartMenu visible={isStartMenuVisible} on:menuItemClick={(event) => handleMenuItemClick(event.detail)} />

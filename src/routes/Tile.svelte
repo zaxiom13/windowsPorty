@@ -7,6 +7,7 @@
 	export let id: number;
 	export let x: number = 0;
 	export let y: number = 0;
+	export let title: string;
 
 	let tile: HTMLDivElement;
 	let tileInstance: TileClass;
@@ -31,7 +32,7 @@
 
 <div class="tile" bind:this={tile}>
 	<div class="titlebar">
-		<div class="title">Window Title</div>
+		<div class="title">{title}</div>
 		<div class="buttons">
 			<button class="minimize">_</button>
 			<button class="maximize">□</button>

@@ -1,5 +1,24 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
   export let visible: boolean = false;
+
+  const dispatch = createEventDispatcher();
+
+  const menuItems = [
+    "Programs",
+    "Documents",
+    "Settings",
+    "Find",
+    "Help",
+    "Run...",
+    "Log Off...",
+    "Shut Down..."
+  ];
+
+  function handleItemClick(item: string) {
+    dispatch('menuItemClick', item);
+  }
 </script>
 
 <style>
@@ -20,26 +39,21 @@
     display: block;
   }
 
-  .start-menu div {
+  .menu-item {
     padding: 4px 8px;
     cursor: pointer;
     font-family: 'Tahoma', sans-serif;
     font-size: 11px;
   }
 
-  .start-menu div:hover {
+  .menu-item:hover {
     background-color: #000080;
     color: white;
   }
 </style>
 
 <div class="start-menu {visible ? 'visible' : ''}">
-  <div>Programs</div>
-  <div>Documents</div>
-  <div>Settings</div>
-  <div>Find</div>
-  <div>Help</div>
-  <div>Run...</div>
-  <div>Log Off...</div>
-  <div>Shut Down...</div>
+  {#each menuItems as item}
+    <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
+  {/each}
 </div>
