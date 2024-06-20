@@ -54,11 +54,22 @@ File: directory_structure.txt
 ├── complete_output.sh
 ├── directory_structure.txt
 lib
+components
+Desktop
+└── *
+Taskbar
+└── *
+Window
+└── *
 images
 ├── github.svg
 ├── svelte-logo.svg
 ├── svelte-welcome.png
 └── svelte-welcome.webp
+stores
+└── *
+utils
+└── *
 ├── output.txt
 ├── repo_to_txt.sh
 routes
@@ -526,17 +537,24 @@ File: Tile.svelte
 	];
 
 	onMount(() => {
-		tileInstance = new TileClass(tile, desktop);
+		tileInstance = new TileClass(tile, desktop, () => {
+			isFocused = true;
+			dispatch('focus', id);
+		});
 		tile.style.left = `${x}px`;
 		tile.style.top = `${y}px`;
 	});
 
-	function focus() {
-		dispatch('focus', id);
+	function handleMouseDown(event: MouseEvent) {
+		const titlebar = tile.querySelector('.titlebar');
+		if (titlebar && titlebar.contains(event.target as Node)) {
+			tileInstance.startDragging(event);
+		}
+		tileInstance.focus();
 	}
 </script>
 
-<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={focus}>
+<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={handleMouseDown}>
 	<div class="titlebar" class:focused={isFocused}>
 		<div class="title">{title}</div>
 		<div class="buttons">
@@ -582,15 +600,12 @@ File: Tile.svelte
 		align-items: center;
 		justify-content: space-between;
 		padding: 2px 3px;
+		cursor: move;
 	}
 
 	.titlebar.focused {
 		background: linear-gradient(to right, #000080, #1084d0);
 		color: white;
-	}
-
-	.titlebar:active {
-		cursor: grabbing;
 	}
 
 	.buttons {
@@ -697,10 +712,12 @@ export class Tile {
     private initialWidth!: number;
     private initialHeight!: number;
     private resizeDirection!: string;
+    private onFocus: () => void;
 
-    constructor(tile: HTMLDivElement, desktop: HTMLDivElement) {
+    constructor(tile: HTMLDivElement, desktop: HTMLDivElement, onFocus: () => void) {
         this.tile = tile;
         this.desktop = desktop;
+        this.onFocus = onFocus;
         tileManager.registerTile(this.tile);
         this.initializeEventListeners();
     }
@@ -709,20 +726,27 @@ export class Tile {
         this.tile.addEventListener('mousedown', this.onMouseDown.bind(this));
     }
 
-    private onMouseDown(event: MouseEvent) {
-        tileManager.bringToFront(this.tile);
-        const target = event.target as HTMLElement;
-        if (target.classList.contains('titlebar')) {
-            this.isDragging = true;
-            this.startX = event.clientX;
-            this.startY = event.clientY;
-            this.initialX = this.tile.offsetLeft;
-            this.initialY = this.tile.offsetTop;
+    public startDragging(event: MouseEvent) {
+        this.isDragging = true;
+        this.startX = event.clientX;
+        this.startY = event.clientY;
+        this.initialX = this.tile.offsetLeft;
+        this.initialY = this.tile.offsetTop;
 
-            window.addEventListener('mousemove', this.onMouseMove.bind(this));
-            window.addEventListener('mouseup', this.onMouseUp.bind(this));
-            event.preventDefault();
-        } else if (target.classList.contains('resize-handle')) {
+        window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('mouseup', this.onMouseUp.bind(this));
+        event.preventDefault();
+    }
+
+    public focus() {
+        tileManager.bringToFront(this.tile);
+        this.onFocus();
+    }
+
+    private onMouseDown(event: MouseEvent) {
+        this.focus();
+        const target = event.target as HTMLElement;
+        if (target.classList.contains('resize-handle')) {
             this.isResizing = true;
             this.startX = event.clientX;
             this.startY = event.clientY;
