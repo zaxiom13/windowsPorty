@@ -25,20 +25,7 @@ export class Tile {
     }
 
     private onMouseDown(event: MouseEvent) {
-        tileManager.bringToFront(this.tile);  // Bring this tile to the front on interaction
-        const allTiles = document.querySelectorAll('.tile');
-        allTiles.forEach(tile => {
-            const titlebar = tile.querySelector('.titlebar') as HTMLElement;
-            if (titlebar) {
-                titlebar.style.backgroundColor = '#3498db'; // Default color
-            }
-        });
-
-        // Set the 'active' state (darker titlebar) for this tile
-        const titlebar = this.tile.querySelector('.titlebar') as HTMLElement;
-        if (titlebar) {
-            titlebar.style.backgroundColor = '#2980b9'; // Darker color
-        }
+        tileManager.bringToFront(this.tile);
         const target = event.target as HTMLElement;
         if (target.classList.contains('titlebar')) {
             this.isDragging = true;
@@ -81,14 +68,11 @@ export class Tile {
         let newX = this.initialX + dx;
         let newY = this.initialY + dy;
 
-        // Boundary conditions
-        const rect = this.desktop.getBoundingClientRect();
+        const desktopRect = this.desktop.getBoundingClientRect();
         const tileRect = this.tile.getBoundingClientRect();
 
-        if (newX < 0) newX = 0;
-        if (newY < 0) newY = 0;
-        if (newX + tileRect.width > rect.width) newX = rect.width - tileRect.width;
-        if (newY + tileRect.height > rect.height) newY = rect.height - tileRect.height;
+        newX = Math.max(0, Math.min(newX, desktopRect.width - tileRect.width));
+        newY = Math.max(0, Math.min(newY, desktopRect.height - tileRect.height));
 
         this.tile.style.left = `${newX}px`;
         this.tile.style.top = `${newY}px`;
@@ -98,54 +82,50 @@ export class Tile {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
 
+        const desktopRect = this.desktop.getBoundingClientRect();
+        const minWidth = 100;
+        const minHeight = 100;
+        const maxWidth = 500;
+        const maxHeight = 500;
+
         let newWidth = this.initialWidth;
         let newHeight = this.initialHeight;
         let newX = this.initialX;
         let newY = this.initialY;
 
         if (this.resizeDirection.includes('right')) {
-            newWidth = this.initialWidth + dx;
+            newWidth = Math.min(
+                Math.max(minWidth, this.initialWidth + dx),
+                desktopRect.width - this.initialX,
+                maxWidth
+            );
         }
         if (this.resizeDirection.includes('bottom')) {
-            newHeight = this.initialHeight + dy;
+            newHeight = Math.min(
+                Math.max(minHeight, this.initialHeight + dy),
+                desktopRect.height - this.initialY,
+                maxHeight
+            );
         }
         if (this.resizeDirection.includes('left')) {
-            newWidth = this.initialWidth - dx;
-            newX = this.initialX + dx;
+            const maxLeftResize = this.initialX + this.initialWidth - minWidth;
+            const leftResize = Math.min(dx, maxLeftResize);
+            newWidth = Math.min(
+                Math.max(minWidth, this.initialWidth - leftResize),
+                maxWidth,
+                this.initialX + this.initialWidth
+            );
+            newX = Math.max(0, Math.min(this.initialX + dx, this.initialX + this.initialWidth - minWidth));
         }
         if (this.resizeDirection.includes('top')) {
-            newHeight = this.initialHeight - dy;
-            newY = this.initialY + dy;
-        }
-
-        // Apply min and max width and height
-        const minWidth = 100;
-        const minHeight = 100;
-        const maxWidth = 500;
-        const maxHeight = 500;
-
-        if (newWidth < minWidth) {
-            newWidth = minWidth;
-            if (this.resizeDirection.includes('left')) {
-                newX = this.initialX + (this.initialWidth - minWidth);
-            }
-        } else if (newWidth > maxWidth) {
-            newWidth = maxWidth;
-            if (this.resizeDirection.includes('left')) {
-                newX = this.initialX + (this.initialWidth - maxWidth);
-            }
-        }
-
-        if (newHeight < minHeight) {
-            newHeight = minHeight;
-            if (this.resizeDirection.includes('top')) {
-                newY = this.initialY + (this.initialHeight - minHeight);
-            }
-        } else if (newHeight > maxHeight) {
-            newHeight = maxHeight;
-            if (this.resizeDirection.includes('top')) {
-                newY = this.initialY + (this.initialHeight - maxHeight);
-            }
+            const maxTopResize = this.initialY + this.initialHeight - minHeight;
+            const topResize = Math.min(dy, maxTopResize);
+            newHeight = Math.min(
+                Math.max(minHeight, this.initialHeight - topResize),
+                maxHeight,
+                this.initialY + this.initialHeight
+            );
+            newY = Math.max(0, Math.min(this.initialY + dy, this.initialY + this.initialHeight - minHeight));
         }
 
         this.tile.style.width = `${newWidth}px`;
