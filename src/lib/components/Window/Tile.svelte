@@ -10,6 +10,7 @@
 	export let y: number;
 	export let title: string;
 	export let isFocused: boolean;
+	export let isMinimized: boolean = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -36,13 +37,17 @@
 		}
 		tileInstance.focus();
 	}
+
+	function minimize() {
+		dispatch('minimize', id);
+	}
 </script>
 
-<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={handleMouseDown}>
+<div class="tile" class:focused={isFocused} class:minimized={isMinimized} bind:this={tile} on:mousedown={handleMouseDown}>
 	<div class="titlebar" class:focused={isFocused}>
 		<div class="title">{title}</div>
 		<div class="buttons">
-			<button class="minimize">_</button>
+			<button class="minimize" on:click={minimize}>_</button>
 			<button class="maximize">□</button>
 			<button class="close">X</button>
 		</div>
@@ -52,7 +57,6 @@
 		<ResizeHandle {direction} />
 	{/each}
 </div>
-
 <style>
 	.tile {
 		width: 300px;
@@ -72,6 +76,10 @@
 		border-right-color: #808080;
 		border-bottom-color: #808080;
 		box-shadow: 1px 1px 0 #000000;
+	}
+
+    .tile.minimized {
+		display: none;
 	}
 
 	.titlebar {

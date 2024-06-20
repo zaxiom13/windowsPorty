@@ -4,4 +4,5 @@ export interface TileData {
 	y: number;
 	title: string;
 	isFocused: boolean;
+	isMinimized: boolean;
 }

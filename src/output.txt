@@ -54,651 +54,34 @@ File: directory_structure.txt
 ├── complete_output.sh
 ├── directory_structure.txt
 lib
+classes
+├── Tile.ts
+└── TileManager.ts
 components
-Desktop
-└── *
 Taskbar
-└── *
+├── StartMenu.svelte
+└── Taskbar.svelte
 Window
-└── *
-images
-├── github.svg
-├── svelte-logo.svg
-├── svelte-welcome.png
-└── svelte-welcome.webp
-stores
-└── *
+├── ResizeHandle.svelte
+└── Tile.svelte
+types
+└── TileData.ts
 utils
-└── *
+└── tileUtils.ts
 ├── output.txt
 ├── repo_to_txt.sh
 routes
 ├── +layout.svelte
 ├── +page.svelte
 ├── +page.ts
-├── ResizeHandle.svelte
-├── StartMenu.svelte
-├── styles.css
-├── Taskbar.svelte
-└── Tile.svelte
+└── styles.css
 ├── show_tree.sh
-├── Tile.ts
-└── TileManager.ts
+└── Tile.ts
 
 =======================
-File: output.txt
+File: lib/classes/Tile.ts
 =======================
-
-=======================
-File: repo_to_txt.sh
-=======================
-#!/bin/bash
-
-# Directory containing the files
-DIR="."
-
-# Output file
-OUTPUT="output.txt"
-
-# Clear the output file if it exists
-> "$OUTPUT"
-
-# Find all files in the directory and subdirectories, excluding certain file types
-find "$DIR" -type f ! \( -name '*.svg' -o -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.webp' -o -name '*.gif' -o -name '*.bmp' \) | while read -r FILE; do
-    FILENAME=$(basename "$FILE")
-    # Add a banner with the filename
-    echo "=======================" >> "$OUTPUT"
-    echo "File: $FILENAME" >> "$OUTPUT"
-    echo "=======================" >> "$OUTPUT"
-    # Append the contents of each file to the output file
-    cat "$FILE" >> "$OUTPUT"
-    echo >> "$OUTPUT"  # Add a newline for separation
-done
-
-echo "All files have been concatenated into $OUTPUT"
-
-=======================
-File: +layout.svelte
-=======================
-<script>
-</script>
-
-<div >
-
-
-	<main>
-		<slot />
-	</main>
-
-
-</div>
-
-
-=======================
-File: +page.svelte
-=======================
-<script lang="ts">
-	import { onMount } from 'svelte';
-	import Taskbar from './Taskbar.svelte';
-	import Tile from './Tile.svelte';
-
-	let desktop: HTMLDivElement;
-	let tiles: Array<{ id: number, x: number, y: number, title: string, isFocused: boolean }> = [];
-	let nextTileId = 0;
-
-	onMount(() => {
-		// No initial tiles
-	});
-
-	function addTile(title: string) {
-		const desktopRect = desktop.getBoundingClientRect();
-		const tileWidth = 300;
-		const tileHeight = 200;
-
-		// Calculate random position
-		const maxX = desktopRect.width - tileWidth;
-		const maxY = desktopRect.height - tileHeight - 28; // Subtract taskbar height
-		const x = Math.floor(Math.random() * maxX);
-		const y = Math.floor(Math.random() * maxY);
-
-		const newTile = { id: nextTileId++, x, y, title, isFocused: true };
-		tiles = tiles.map(tile => ({ ...tile, isFocused: false }));
-		tiles = [...tiles, newTile];
-	}
-
-	function handleStartMenuItemClick(item: string) {
-		addTile(item);
-	}
-
-	function focusTile(id: number) {
-		tiles = tiles.map(tile => ({
-			...tile,
-			isFocused: tile.id === id
-		}));
-	}
-</script>
-
-<div class="desktop" bind:this={desktop}>
-	{#each tiles as tile (tile.id)}
-		<Tile 
-			{desktop} 
-			id={tile.id} 
-			x={tile.x} 
-			y={tile.y} 
-			title={tile.title}
-			isFocused={tile.isFocused}
-			on:focus={(event) => focusTile(event.detail)}
-		/>
-	{/each}
-	<Taskbar 
-		on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
-		on:focusWindow={(event) => focusTile(event.detail)}
-		openWindows={tiles}
-	/>
-</div>
-
-<style>
-	.desktop {
-		width: 100%;
-		height: 100vh;
-		background-color: #008080;
-		position: relative;
-		overflow: hidden;
-	}
-</style>
-=======================
-File: +page.ts
-=======================
-// since there's no dynamic data here, we can prerender
-// it so that it gets served as a static asset in production
-export const prerender = true;
-
-=======================
-File: ResizeHandle.svelte
-=======================
-<script lang="ts">
-  export let direction: string;
-</script>
-
-<style>
-  .resize-handle {
-    position: absolute;
-    background: transparent;
-  }
-
-  .resize-handle:hover {
-    background: #95a5a6;
-  }
-
-  .resize-handle[data-direction*='top'] {
-    top: -5px;
-    height: 10px;
-  }
-
-  .resize-handle[data-direction*='bottom'] {
-    bottom: -5px;
-    height: 10px;
-  }
-
-  .resize-handle[data-direction*='left'] {
-    left: -5px;
-    width: 10px;
-  }
-
-  .resize-handle[data-direction*='right'] {
-    right: -5px;
-    width: 10px;
-  }
-
-  .resize-handle[data-direction='top-left'] {
-    cursor: nwse-resize;
-    width: 10px;
-    height: 10px;
-  }
-
-  .resize-handle[data-direction='top-right'] {
-    cursor: nesw-resize;
-    width: 10px;
-    height: 10px;
-  }
-
-  .resize-handle[data-direction='bottom-left'] {
-    cursor: nesw-resize;
-    width: 10px;
-    height: 10px;
-  }
-
-  .resize-handle[data-direction='bottom-right'] {
-    cursor: nwse-resize;
-    width: 10px;
-    height: 10px;
-  }
-
-  .resize-handle[data-direction='top'] {
-    cursor: ns-resize;
-    width: 100%;
-  }
-
-  .resize-handle[data-direction='bottom'] {
-    cursor: ns-resize;
-    width: 100%;
-  }
-
-  .resize-handle[data-direction='left'] {
-    cursor: ew-resize;
-    height: 100%;
-  }
-
-  .resize-handle[data-direction='right'] {
-    cursor: ew-resize;
-    height: 100%;
-  }
-</style>
-
-<div
-  class="resize-handle"
-  data-direction={direction}
-  on:mousedown
-></div>
-
-=======================
-File: StartMenu.svelte
-=======================
-<script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  export let visible: boolean = false;
-
-  const dispatch = createEventDispatcher();
-
-  const menuItems = [
-    "Programs",
-    "Documents",
-    "Settings",
-    "Find",
-    "Help",
-    "Run...",
-    "Log Off...",
-    "Shut Down..."
-  ];
-
-  function handleItemClick(item: string) {
-    dispatch('menuItemClick', item);
-  }
-</script>
-
-<style>
-  .start-menu {
-    position: absolute;
-    bottom: 28px;
-    left: 2px;
-    width: 200px;
-    background-color: #D4D0C8;
-    border: 2px solid #808080;
-    border-bottom: none;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    display: none;
-    z-index: 10001;
-  }
-
-  .start-menu.visible {
-    display: block;
-  }
-
-  .menu-item {
-    padding: 4px 8px;
-    cursor: pointer;
-    font-family: 'Tahoma', sans-serif;
-    font-size: 11px;
-  }
-
-  .menu-item:hover {
-    background-color: #000080;
-    color: white;
-  }
-</style>
-
-<div class="start-menu {visible ? 'visible' : ''}">
-  {#each menuItems as item}
-    <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
-  {/each}
-</div>
-=======================
-File: styles.css
-=======================
-
-=======================
-File: Taskbar.svelte
-=======================
-<script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
-  import StartMenu from './StartMenu.svelte';
-
-  const dispatch = createEventDispatcher();
-
-  export let openWindows: Array<{ id: number, title: string, isFocused: boolean }> = [];
-
-  let isStartMenuVisible: boolean = false;
-
-  function toggleStartMenu(): void {
-    isStartMenuVisible = !isStartMenuVisible;
-  }
-
-  function handleClickOutside(event: MouseEvent): void {
-    const startMenu = document.querySelector('.start-menu') as HTMLElement;
-    const startButton = document.querySelector('.start-button') as HTMLElement;
-
-    if (startMenu && startButton && !startButton.contains(event.target as Node)) {
-      isStartMenuVisible = false;
-    }
-  }
-
-  function handleMenuItemClick(item: string) {
-    dispatch('menuItemClick', item);
-    isStartMenuVisible = false;
-  }
-
-  function focusWindow(id: number) {
-    dispatch('focusWindow', id);
-  }
-
-  onMount((): () => void => {
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  });
-</script>
-
-<style>
-  .taskbar {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 28px;
-    background-color: #D4D0C8;
-    display: flex;
-    align-items: center;
-    padding: 0 2px;
-    border-top: 2px solid #ffffff;
-    box-sizing: border-box;
-    z-index: 10000;
-  }
-
-  .start-button {
-    background: linear-gradient(to bottom, #1fdf25, #0a9710);
-    border: 2px solid #ffffff;
-    border-right-color: #808080;
-    border-bottom-color: #808080;
-    color: white;
-    font-weight: bold;
-    font-size: 11px;
-    padding: 2px 5px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    height: 22px;
-    margin-right: 4px;
-  }
-
-  .start-button:before {
-    content: '';
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-color: #008080;
-    margin-right: 4px;
-  }
-
-  .start-button:active {
-    border: 2px solid #808080;
-    border-right-color: #ffffff;
-    border-bottom-color: #ffffff;
-  }
-
-  .window-tabs {
-    display: flex;
-    flex-grow: 1;
-    overflow-x: auto;
-    height: 100%;
-  }
-
-  .window-tab {
-    background-color: #D4D0C8;
-    border: 1px solid #808080;
-    border-bottom: none;
-    padding: 2px 8px;
-    margin-right: 2px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    font-family: 'Tahoma', sans-serif;
-    font-size: 11px;
-  }
-
-  .window-tab.focused {
-    background-color: #ffffff;
-    border-top: 2px solid #ffffff;
-    border-left: 2px solid #ffffff;
-    border-right: 2px solid #808080;
-  }
-</style>
-
-<div class="taskbar">
-  <button class="start-button" on:click={toggleStartMenu}>Start</button>
-  <div class="window-tabs">
-    {#each openWindows as window (window.id)}
-      <div 
-        class="window-tab" 
-        class:focused={window.isFocused}
-        on:click={() => focusWindow(window.id)}
-      >
-        {window.title}
-      </div>
-    {/each}
-  </div>
-</div>
-
-<StartMenu visible={isStartMenuVisible} on:menuItemClick={(event) => handleMenuItemClick(event.detail)} />
-=======================
-File: Tile.svelte
-=======================
-<script lang="ts">
-	import { onMount, createEventDispatcher } from 'svelte';
-	import ResizeHandle from './ResizeHandle.svelte';
-	import { Tile as TileClass } from './../Tile';
-
-	export let desktop: HTMLDivElement;
-	export let id: number;
-	export let x: number = 0;
-	export let y: number = 0;
-	export let title: string;
-	export let isFocused: boolean = false;
-
-	const dispatch = createEventDispatcher();
-
-	let tile: HTMLDivElement;
-	let tileInstance: TileClass;
-
-	const directions = [
-		'top-left',
-		'top-right',
-		'bottom-left',
-		'bottom-right',
-		'top',
-		'bottom',
-		'left',
-		'right'
-	];
-
-	onMount(() => {
-		tileInstance = new TileClass(tile, desktop, () => {
-			isFocused = true;
-			dispatch('focus', id);
-		});
-		tile.style.left = `${x}px`;
-		tile.style.top = `${y}px`;
-	});
-
-	function handleMouseDown(event: MouseEvent) {
-		const titlebar = tile.querySelector('.titlebar');
-		if (titlebar && titlebar.contains(event.target as Node)) {
-			tileInstance.startDragging(event);
-		}
-		tileInstance.focus();
-	}
-</script>
-
-<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={handleMouseDown}>
-	<div class="titlebar" class:focused={isFocused}>
-		<div class="title">{title}</div>
-		<div class="buttons">
-			<button class="minimize">_</button>
-			<button class="maximize">□</button>
-			<button class="close">X</button>
-		</div>
-	</div>
-	<div class="body">Window Content for {title}</div>
-	{#each directions as direction}
-		<ResizeHandle {direction} />
-	{/each}
-</div>
-
-<style>
-	.tile {
-		width: 300px;
-		height: 200px;
-		background-color: #D4D0C8;
-		position: absolute;
-		top: 0;
-		left: 0;
-		display: flex;
-		flex-direction: column;
-		min-width: 100px;
-		min-height: 100px;
-		max-width: 500px;
-		max-height: 500px;
-		user-select: none;
-		border: 2px solid #ffffff;
-		border-right-color: #808080;
-		border-bottom-color: #808080;
-		box-shadow: 1px 1px 0 #000000;
-	}
-
-	.titlebar {
-		height: 18px;
-		background: linear-gradient(to right, #7b7b7b, #a8a8a8);
-		color: #d8d8d8;
-		font-weight: bold;
-		font-size: 12px;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 2px 3px;
-		cursor: move;
-	}
-
-	.titlebar.focused {
-		background: linear-gradient(to right, #000080, #1084d0);
-		color: white;
-	}
-
-	.buttons {
-		display: flex;
-	}
-
-	.buttons button {
-		width: 16px;
-		height: 14px;
-		margin-left: 2px;
-		border: 1px solid #ffffff;
-		background-color: #D4D0C8;
-		color: #000000;
-		font-size: 9px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-	}
-
-	.body {
-		width: 100%;
-		height: calc(100% - 22px);
-		background-color: #ffffff;
-		flex: 1;
-		border: 1px solid #808080;
-		border-top-color: #ffffff;
-		padding: 2px;
-		font-family: 'Tahoma', sans-serif;
-		font-size: 11px;
-	}
-
-	.focused {
-		z-index: 100;
-	}
-</style>
-=======================
-File: show_tree.sh
-=======================
-#!/bin/bash
-
-output_file="directory_structure.txt"
-
-# Function to recursively print directory structure
-print_tree() {
-    local current_dir="$1"
-    local indent="$2"
-    local is_last="$3"
-    local prefix=""
-
-    if [ "$indent" != "" ]; then
-        prefix="$indent"
-        if [ "$is_last" = true ]; then
-            prefix+="└── "
-            indent+="    "
-        else
-            prefix+="├── "
-            indent+="│   "
-        fi
-    fi
-
-    echo "${prefix}$(basename "$current_dir")" >> "$output_file"
-
-    local items=("$current_dir"/*)
-    local total_items=${#items[@]}
-    local count=1
-
-    for item in "${items[@]}"; do
-        if [ -d "$item" ]; then
-            print_tree "$item" "$indent" $(( count == total_items ))
-        else
-            if [ $count -eq $total_items ]; then
-                echo "${indent}└── $(basename "$item")" >> "$output_file"
-            else
-                echo "${indent}├── $(basename "$item")" >> "$output_file"
-            fi
-        fi
-        ((count++))
-    done
-}
-
-# Clear the output file
-echo "" > "$output_file"
-
-# Start printing from the current directory
-print_tree "." "" true
-
-echo "Directory structure has been written to $output_file"
-
-=======================
-File: Tile.ts
-=======================
-import { tileManager } from './TileManager';
+import { tileManager } from './TileManager.ts';
 
 export class Tile {
     private tile: HTMLDivElement;
@@ -843,7 +226,7 @@ export class Tile {
     }
 }
 =======================
-File: TileManager.ts
+File: lib/classes/TileManager.ts
 =======================
 class TileManager {
     private static instance: TileManager;
@@ -878,3 +261,633 @@ class TileManager {
   
   export const tileManager = TileManager.getInstance();
   
+=======================
+File: lib/components/Taskbar/StartMenu.svelte
+=======================
+<script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
+  export let visible: boolean = false;
+
+  const dispatch = createEventDispatcher();
+
+  const menuItems = [
+    "Programs",
+    "Documents",
+    "Settings",
+    "Find",
+    "Help",
+    "Run...",
+    "Log Off...",
+    "Shut Down..."
+  ];
+
+  function handleItemClick(item: string) {
+    dispatch('menuItemClick', item);
+  }
+</script>
+
+<style>
+  .start-menu {
+    position: absolute;
+    bottom: 28px;
+    left: 2px;
+    width: 200px;
+    background-color: #D4D0C8;
+    border: 2px solid #808080;
+    border-bottom: none;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    display: none;
+    z-index: 10001;
+  }
+
+  .start-menu.visible {
+    display: block;
+  }
+
+  .menu-item {
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 11px;
+  }
+
+  .menu-item:hover {
+    background-color: #000080;
+    color: white;
+  }
+</style>
+
+<div class="start-menu {visible ? 'visible' : ''}">
+  {#each menuItems as item}
+    <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
+  {/each}
+</div>
+=======================
+File: lib/components/Taskbar/Taskbar.svelte
+=======================
+<script lang="ts">
+	import { onMount, createEventDispatcher } from 'svelte';
+	import StartMenu from './StartMenu.svelte';
+	import type { TileData } from '$lib/types/TileData';
+
+	const dispatch = createEventDispatcher();
+
+	export let tiles: TileData[] = [];
+
+	let isStartMenuVisible: boolean = false;
+
+	function toggleStartMenu(): void {
+		isStartMenuVisible = !isStartMenuVisible;
+	}
+
+	function handleClickOutside(event: MouseEvent): void {
+		const startMenu = document.querySelector('.start-menu') as HTMLElement;
+		const startButton = document.querySelector('.start-button') as HTMLElement;
+
+		if (startMenu && startButton && !startButton.contains(event.target as Node)) {
+			isStartMenuVisible = false;
+		}
+	}
+
+	function handleMenuItemClick(item: string) {
+		dispatch('menuItemClick', item);
+		isStartMenuVisible = false;
+	}
+
+	function focusWindow(id: number) {
+		dispatch('focusWindow', id);
+	}
+
+	onMount((): () => void => {
+		document.addEventListener('click', handleClickOutside);
+		return () => {
+			document.removeEventListener('click', handleClickOutside);
+		};
+	});
+</script>
+
+<div class="taskbar">
+	<button class="start-button" on:click={toggleStartMenu}>Start</button>
+	<div class="window-tabs">
+		{#each tiles as tile (tile.id)}
+			<div 
+				class="window-tab" 
+				class:focused={tile.isFocused}
+				on:click={() => focusWindow(tile.id)}
+			>
+				{tile.title}
+			</div>
+		{/each}
+	</div>
+</div>
+
+<StartMenu visible={isStartMenuVisible} on:menuItemClick={(event) => handleMenuItemClick(event.detail)} />
+
+
+    <style>
+        .taskbar {
+          position: absolute;
+          bottom: 0;
+          width: 100%;
+          height: 28px;
+          background-color: #D4D0C8;
+          display: flex;
+          align-items: center;
+          padding: 0 2px;
+          border-top: 2px solid #ffffff;
+          box-sizing: border-box;
+          z-index: 10000;
+        }
+      
+        .start-button {
+          background: linear-gradient(to bottom, #1fdf25, #0a9710);
+          border: 2px solid #ffffff;
+          border-right-color: #808080;
+          border-bottom-color: #808080;
+          color: white;
+          font-weight: bold;
+          font-size: 11px;
+          padding: 2px 5px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          height: 22px;
+          margin-right: 4px;
+        }
+      
+        .start-button:before {
+          content: '';
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          background-color: #008080;
+          margin-right: 4px;
+        }
+      
+        .start-button:active {
+          border: 2px solid #808080;
+          border-right-color: #ffffff;
+          border-bottom-color: #ffffff;
+        }
+      
+        .window-tabs {
+          display: flex;
+          flex-grow: 1;
+          overflow-x: auto;
+          height: 100%;
+        }
+      
+        .window-tab {
+          background-color: #D4D0C8;
+          border: 1px solid #808080;
+          border-bottom: none;
+          padding: 2px 8px;
+          margin-right: 2px;
+          cursor: pointer;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 150px;
+          height: 22px;
+          display: flex;
+          align-items: center;
+          font-family: 'Tahoma', sans-serif;
+          font-size: 11px;
+        }
+      
+        .window-tab.focused {
+          background-color: #ffffff;
+          border-top: 2px solid #ffffff;
+          border-left: 2px solid #ffffff;
+          border-right: 2px solid #808080;
+        }
+      </style>
+=======================
+File: lib/components/Window/ResizeHandle.svelte
+=======================
+<script lang="ts">
+  export let direction: string;
+</script>
+
+<style>
+  .resize-handle {
+    position: absolute;
+    background: transparent;
+  }
+
+  .resize-handle:hover {
+    background: #95a5a6;
+  }
+
+  .resize-handle[data-direction*='top'] {
+    top: -5px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction*='bottom'] {
+    bottom: -5px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction*='left'] {
+    left: -5px;
+    width: 10px;
+  }
+
+  .resize-handle[data-direction*='right'] {
+    right: -5px;
+    width: 10px;
+  }
+
+  .resize-handle[data-direction='top-left'] {
+    cursor: nwse-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='top-right'] {
+    cursor: nesw-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='bottom-left'] {
+    cursor: nesw-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='bottom-right'] {
+    cursor: nwse-resize;
+    width: 10px;
+    height: 10px;
+  }
+
+  .resize-handle[data-direction='top'] {
+    cursor: ns-resize;
+    width: 100%;
+  }
+
+  .resize-handle[data-direction='bottom'] {
+    cursor: ns-resize;
+    width: 100%;
+  }
+
+  .resize-handle[data-direction='left'] {
+    cursor: ew-resize;
+    height: 100%;
+  }
+
+  .resize-handle[data-direction='right'] {
+    cursor: ew-resize;
+    height: 100%;
+  }
+</style>
+
+<div
+  class="resize-handle"
+  data-direction={direction}
+  on:mousedown
+></div>
+
+=======================
+File: lib/components/Window/Tile.svelte
+=======================
+<script lang="ts">
+	import { onMount, createEventDispatcher } from 'svelte';
+	import ResizeHandle from './ResizeHandle.svelte';
+	import { Tile as TileClass } from '$lib/classes/Tile';
+	import type { TileData } from '$lib/types/TileData';
+
+	export let desktop: HTMLDivElement;
+	export let id: number;
+	export let x: number;
+	export let y: number;
+	export let title: string;
+	export let isFocused: boolean;
+
+	const dispatch = createEventDispatcher();
+
+	let tile: HTMLDivElement;
+	let tileInstance: TileClass;
+
+	const directions = [
+		'top-left', 'top-right', 'bottom-left', 'bottom-right',
+		'top', 'bottom', 'left', 'right'
+	];
+
+	onMount(() => {
+		tileInstance = new TileClass(tile, desktop, () => {
+			dispatch('focus', id);
+		});
+		tile.style.left = `${x}px`;
+		tile.style.top = `${y}px`;
+	});
+
+	function handleMouseDown(event: MouseEvent) {
+		const titlebar = tile.querySelector('.titlebar');
+		if (titlebar && titlebar.contains(event.target as Node)) {
+			tileInstance.startDragging(event);
+		}
+		tileInstance.focus();
+	}
+</script>
+
+<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={handleMouseDown}>
+	<div class="titlebar" class:focused={isFocused}>
+		<div class="title">{title}</div>
+		<div class="buttons">
+			<button class="minimize">_</button>
+			<button class="maximize">□</button>
+			<button class="close">X</button>
+		</div>
+	</div>
+	<div class="body">Window Content for {title}</div>
+	{#each directions as direction}
+		<ResizeHandle {direction} />
+	{/each}
+</div>
+
+<style>
+	.tile {
+		width: 300px;
+		height: 200px;
+		background-color: #D4D0C8;
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: flex;
+		flex-direction: column;
+		min-width: 100px;
+		min-height: 100px;
+		max-width: 500px;
+		max-height: 500px;
+		user-select: none;
+		border: 2px solid #ffffff;
+		border-right-color: #808080;
+		border-bottom-color: #808080;
+		box-shadow: 1px 1px 0 #000000;
+	}
+
+	.titlebar {
+		height: 18px;
+		background: linear-gradient(to right, #7b7b7b, #a8a8a8);
+		color: #d8d8d8;
+		font-weight: bold;
+		font-size: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 2px 3px;
+		cursor: move;
+	}
+
+	.titlebar.focused {
+		background: linear-gradient(to right, #000080, #1084d0);
+		color: white;
+	}
+
+	.buttons {
+		display: flex;
+	}
+
+	.buttons button {
+		width: 16px;
+		height: 14px;
+		margin-left: 2px;
+		border: 1px solid #ffffff;
+		background-color: #D4D0C8;
+		color: #000000;
+		font-size: 9px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+
+	.body {
+		width: 100%;
+		height: calc(100% - 22px);
+		background-color: #ffffff;
+		flex: 1;
+		border: 1px solid #808080;
+		border-top-color: #ffffff;
+		padding: 2px;
+		font-family: 'Tahoma', sans-serif;
+		font-size: 11px;
+	}
+
+	.focused {
+		z-index: 100;
+	}
+</style>
+=======================
+File: lib/types/TileData.ts
+=======================
+export interface TileData {
+	id: number;
+	x: number;
+	y: number;
+	title: string;
+	isFocused: boolean;
+}
+=======================
+File: lib/utils/tileUtils.ts
+=======================
+import type { TileData } from '$lib/types/TileData';
+
+export function addTile(tiles: TileData[], nextTileId: number, desktop: HTMLDivElement, title: string): TileData[] {
+	const desktopRect = desktop.getBoundingClientRect();
+	const tileWidth = 300;
+	const tileHeight = 200;
+
+	const maxX = desktopRect.width - tileWidth;
+	const maxY = desktopRect.height - tileHeight - 28;
+	const x = Math.floor(Math.random() * maxX);
+	const y = Math.floor(Math.random() * maxY);
+
+	const newTile: TileData = { id: nextTileId, x, y, title, isFocused: true };
+	return [...tiles.map(tile => ({ ...tile, isFocused: false })), newTile];
+}
+
+export function focusTile(tiles: TileData[], id: number): TileData[] {
+	return tiles.map(tile => ({
+		...tile,
+		isFocused: tile.id === id
+	}));
+}
+=======================
+File: output.txt
+=======================
+
+=======================
+File: repo_to_txt.sh
+=======================
+#!/bin/bash
+
+# Directory containing the files
+DIR="."
+# Output file
+OUTPUT="output.txt"
+# Clear the output file if it exists
+> "$OUTPUT"
+
+# Find all files in the directory and subdirectories, excluding certain file types
+find "$DIR" -type f ! \( -name '*.svg' -o -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.webp' -o -name '*.gif' -o -name '*.bmp' \) | while read -r FILE; do
+    # Get the filename
+    FILENAME=$(basename "$FILE")
+    # Get the relative path (remove the leading "./" if present)
+    RELPATH=$(dirname "$FILE" | sed 's|^\./||')
+    
+    # Add a banner with the filename and its path
+    echo "=======================" >> "$OUTPUT"
+    if [ "$RELPATH" = "." ]; then
+        echo "File: $FILENAME" >> "$OUTPUT"
+    else
+        echo "File: $RELPATH/$FILENAME" >> "$OUTPUT"
+    fi
+    echo "=======================" >> "$OUTPUT"
+    
+    # Append the contents of each file to the output file
+    cat "$FILE" >> "$OUTPUT"
+    echo >> "$OUTPUT"  # Add a newline for separation
+done
+
+echo "All files have been concatenated into $OUTPUT"
+=======================
+File: routes/+layout.svelte
+=======================
+<script>
+</script>
+
+<div >
+
+
+	<main>
+		<slot />
+	</main>
+
+
+</div>
+
+
+=======================
+File: routes/+page.svelte
+=======================
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
+	import Tile from '$lib/components/Window/Tile.svelte';
+	import type { TileData } from '$lib/types/TileData';
+	import { addTile, focusTile } from '$lib/utils/tileUtils';
+
+	let desktop: HTMLDivElement;
+	let tiles: TileData[] = [];
+	let nextTileId = 0;
+
+	onMount(() => {
+		// No initial tiles
+	});
+
+	function handleStartMenuItemClick(item: string) {
+		tiles = addTile(tiles, nextTileId++, desktop, item);
+	}
+
+	function handleFocusTile(id: number) {
+		tiles = focusTile(tiles, id);
+	}
+</script>
+
+<div class="desktop" bind:this={desktop}>
+	{#each tiles as tile (tile.id)}
+		<Tile 
+			{...tile}
+			{desktop}
+			on:focus={() => handleFocusTile(tile.id)}
+		/>
+	{/each}
+	<Taskbar 
+		on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
+		on:focusWindow={({ detail }) => handleFocusTile(detail)}
+		{tiles}
+	/>
+</div>
+
+<style>
+	.desktop {
+		width: 100%;
+		height: 100vh;
+		background-color: #008080;
+		position: relative;
+		overflow: hidden;
+	}
+</style>
+=======================
+File: routes/+page.ts
+=======================
+// since there's no dynamic data here, we can prerender
+// it so that it gets served as a static asset in production
+export const prerender = true;
+
+=======================
+File: routes/styles.css
+=======================
+
+=======================
+File: show_tree.sh
+=======================
+#!/bin/bash
+
+output_file="directory_structure.txt"
+
+# Function to recursively print directory structure
+print_tree() {
+    local current_dir="$1"
+    local indent="$2"
+    local is_last="$3"
+    local prefix=""
+
+    if [ "$indent" != "" ]; then
+        prefix="$indent"
+        if [ "$is_last" = true ]; then
+            prefix+="└── "
+            indent+="    "
+        else
+            prefix+="├── "
+            indent+="│   "
+        fi
+    fi
+
+    echo "${prefix}$(basename "$current_dir")" >> "$output_file"
+
+    local items=("$current_dir"/*)
+    local total_items=${#items[@]}
+    local count=1
+
+    for item in "${items[@]}"; do
+        if [ -d "$item" ]; then
+            print_tree "$item" "$indent" $(( count == total_items ))
+        else
+            if [ $count -eq $total_items ]; then
+                echo "${indent}└── $(basename "$item")" >> "$output_file"
+            else
+                echo "${indent}├── $(basename "$item")" >> "$output_file"
+            fi
+        fi
+        ((count++))
+    done
+}
+
+# Clear the output file
+echo "" > "$output_file"
+
+# Start printing from the current directory
+print_tree "." "" true
+
+echo "Directory structure has been written to $output_file"
+
+=======================
+File: Tile.ts
+=======================
+
