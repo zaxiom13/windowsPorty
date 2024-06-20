@@ -27,12 +27,18 @@
 		tile.style.left = `${x}px`;
 		tile.style.top = `${y}px`;
 	});
-
 </script>
 
 <div class="tile" bind:this={tile}>
-	<div class="titlebar">Title Bar</div>
-	<div class="body">Tile Body</div>
+	<div class="titlebar">
+		<div class="title">Window Title</div>
+		<div class="buttons">
+			<button class="minimize">_</button>
+			<button class="maximize">□</button>
+			<button class="close">X</button>
+		</div>
+	</div>
+	<div class="body">Window Content</div>
 	{#each directions as direction}
 		<ResizeHandle {direction} />
 	{/each}
@@ -40,9 +46,9 @@
 
 <style>
 	.tile {
-		width: 200px;
+		width: 300px;
 		height: 200px;
-		background-color: #3498db;
+		background-color: #D4D0C8;
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -53,16 +59,55 @@
 		max-width: 500px;
 		max-height: 500px;
 		user-select: none;
+		border: 2px solid #ffffff;
+		border-right-color: #808080;
+		border-bottom-color: #808080;
+		box-shadow: 1px 1px 0 #000000;
+	}
+
+	.titlebar {
+		height: 18px;
+		background: linear-gradient(to right, #000080, #1084d0);
+		color: white;
+		font-weight: bold;
+		font-size: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 2px 3px;
 	}
 
 	.titlebar:active {
 		cursor: grabbing;
 	}
 
+	.buttons {
+		display: flex;
+	}
+
+	.buttons button {
+		width: 16px;
+		height: 14px;
+		margin-left: 2px;
+		border: 1px solid #ffffff;
+		background-color: #D4D0C8;
+		color: #000000;
+		font-size: 9px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+
 	.body {
 		width: 100%;
-		height: calc(100% - 30px);
-		background-color: #ecf0f1;
+		height: calc(100% - 22px);
+		background-color: #ffffff;
 		flex: 1;
+		border: 1px solid #808080;
+		border-top-color: #ffffff;
+		padding: 2px;
+		font-family: 'Tahoma', sans-serif;
+		font-size: 11px;
 	}
 </style>

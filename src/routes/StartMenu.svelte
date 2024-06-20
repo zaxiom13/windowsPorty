@@ -4,34 +4,42 @@
 
 <style>
   .start-menu {
-      position: absolute;
-      bottom: 40px; /* Adjust based on the height of the taskbar */
-      left: 10px;
-      width: 200px;
-      background-color: white;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      display: none;
-      z-index: 10000;
+    position: absolute;
+    bottom: 28px;
+    left: 2px;
+    width: 200px;
+    background-color: #D4D0C8;
+    border: 2px solid #808080;
+    border-bottom: none;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    display: none;
+    z-index: 10001;
   }
 
   .start-menu.visible {
-      display: block;
+    display: block;
   }
 
   .start-menu div {
-      padding: 10px;
-      cursor: pointer;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 11px;
   }
 
   .start-menu div:hover {
-      background-color: #f0f0f0;
+    background-color: #000080;
+    color: white;
   }
 </style>
 
 <div class="start-menu {visible ? 'visible' : ''}">
-  <!-- Start menu content goes here -->
-  <div>Item 1</div>
-  <div>Item 2</div>
-  <div>Item 3</div>
+  <div>Programs</div>
+  <div>Documents</div>
+  <div>Settings</div>
+  <div>Find</div>
+  <div>Help</div>
+  <div>Run...</div>
+  <div>Log Off...</div>
+  <div>Shut Down...</div>
 </div>

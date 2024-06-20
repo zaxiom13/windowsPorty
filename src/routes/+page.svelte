@@ -4,7 +4,7 @@
 	import Tile from './Tile.svelte';
 
 	let desktop: HTMLDivElement;
-	let tiles: Array<{ id: number, x: number, y: number }> = [];
+	let tiles: Array<{ id: number; x: number; y: number }> = [];
 	let nextTileId = 0;
 
 	onMount(() => {
@@ -47,5 +47,9 @@
 	}
 	.add-tile-button:hover {
 		background-color: #2980b9;
+	}
+
+	.desktop {
+		background-color: #008080;
 	}
 </style>
