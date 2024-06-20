@@ -4,6 +4,8 @@
 
   const dispatch = createEventDispatcher();
 
+  export let openWindows: Array<{ id: number, title: string, isFocused: boolean }> = [];
+
   let isStartMenuVisible: boolean = false;
 
   function toggleStartMenu(): void {
@@ -22,6 +24,10 @@
   function handleMenuItemClick(item: string) {
     dispatch('menuItemClick', item);
     isStartMenuVisible = false;
+  }
+
+  function focusWindow(id: number) {
+    dispatch('focusWindow', id);
   }
 
   onMount((): () => void => {
@@ -60,6 +66,7 @@
     display: flex;
     align-items: center;
     height: 22px;
+    margin-right: 4px;
   }
 
   .start-button:before {
@@ -76,10 +83,53 @@
     border-right-color: #ffffff;
     border-bottom-color: #ffffff;
   }
+
+  .window-tabs {
+    display: flex;
+    flex-grow: 1;
+    overflow-x: auto;
+    height: 100%;
+  }
+
+  .window-tab {
+    background-color: #D4D0C8;
+    border: 1px solid #808080;
+    border-bottom: none;
+    padding: 2px 8px;
+    margin-right: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 11px;
+  }
+
+  .window-tab.focused {
+    background-color: #ffffff;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #808080;
+  }
 </style>
 
 <div class="taskbar">
   <button class="start-button" on:click={toggleStartMenu}>Start</button>
+  <div class="window-tabs">
+    {#each openWindows as window (window.id)}
+      <div 
+        class="window-tab" 
+        class:focused={window.isFocused}
+        on:click={() => focusWindow(window.id)}
+      >
+        {window.title}
+      </div>
+    {/each}
+  </div>
 </div>
 
 <StartMenu visible={isStartMenuVisible} on:menuItemClick={(event) => handleMenuItemClick(event.detail)} />

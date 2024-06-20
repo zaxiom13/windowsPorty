@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import ResizeHandle from './ResizeHandle.svelte';
 	import { Tile as TileClass } from './../Tile';
 
@@ -8,6 +8,9 @@
 	export let x: number = 0;
 	export let y: number = 0;
 	export let title: string;
+	export let isFocused: boolean = false;
+
+	const dispatch = createEventDispatcher();
 
 	let tile: HTMLDivElement;
 	let tileInstance: TileClass;
@@ -28,10 +31,14 @@
 		tile.style.left = `${x}px`;
 		tile.style.top = `${y}px`;
 	});
+
+	function focus() {
+		dispatch('focus', id);
+	}
 </script>
 
-<div class="tile" bind:this={tile}>
-	<div class="titlebar">
+<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={focus}>
+	<div class="titlebar" class:focused={isFocused}>
 		<div class="title">{title}</div>
 		<div class="buttons">
 			<button class="minimize">_</button>
@@ -39,7 +46,7 @@
 			<button class="close">X</button>
 		</div>
 	</div>
-	<div class="body">Window Content</div>
+	<div class="body">Window Content for {title}</div>
 	{#each directions as direction}
 		<ResizeHandle {direction} />
 	{/each}
@@ -68,14 +75,19 @@
 
 	.titlebar {
 		height: 18px;
-		background: linear-gradient(to right, #000080, #1084d0);
-		color: white;
+		background: linear-gradient(to right, #7b7b7b, #a8a8a8);
+		color: #d8d8d8;
 		font-weight: bold;
 		font-size: 12px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: 2px 3px;
+	}
+
+	.titlebar.focused {
+		background: linear-gradient(to right, #000080, #1084d0);
+		color: white;
 	}
 
 	.titlebar:active {
@@ -110,5 +122,9 @@
 		padding: 2px;
 		font-family: 'Tahoma', sans-serif;
 		font-size: 11px;
+	}
+
+	.focused {
+		z-index: 100;
 	}
 </style>

@@ -4,7 +4,7 @@
 	import Tile from './Tile.svelte';
 
 	let desktop: HTMLDivElement;
-	let tiles: Array<{ id: number, x: number, y: number, title: string }> = [];
+	let tiles: Array<{ id: number, x: number, y: number, title: string, isFocused: boolean }> = [];
 	let nextTileId = 0;
 
 	onMount(() => {
@@ -18,23 +18,44 @@
 
 		// Calculate random position
 		const maxX = desktopRect.width - tileWidth;
-		const maxY = desktopRect.height - tileHeight;
+		const maxY = desktopRect.height - tileHeight - 28; // Subtract taskbar height
 		const x = Math.floor(Math.random() * maxX);
 		const y = Math.floor(Math.random() * maxY);
 
-		tiles = [...tiles, { id: nextTileId++, x, y, title }];
+		const newTile = { id: nextTileId++, x, y, title, isFocused: true };
+		tiles = tiles.map(tile => ({ ...tile, isFocused: false }));
+		tiles = [...tiles, newTile];
 	}
 
 	function handleStartMenuItemClick(item: string) {
 		addTile(item);
 	}
+
+	function focusTile(id: number) {
+		tiles = tiles.map(tile => ({
+			...tile,
+			isFocused: tile.id === id
+		}));
+	}
 </script>
 
 <div class="desktop" bind:this={desktop}>
 	{#each tiles as tile (tile.id)}
-		<Tile {desktop} id={tile.id} x={tile.x} y={tile.y} title={tile.title} />
+		<Tile 
+			{desktop} 
+			id={tile.id} 
+			x={tile.x} 
+			y={tile.y} 
+			title={tile.title}
+			isFocused={tile.isFocused}
+			on:focus={(event) => focusTile(event.detail)}
+		/>
 	{/each}
-	<Taskbar on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)} />
+	<Taskbar 
+		on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
+		on:focusWindow={(event) => focusTile(event.detail)}
+		openWindows={tiles}
+	/>
 </div>
 
 <style>
