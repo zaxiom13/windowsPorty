@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
 	import ResizeHandle from './ResizeHandle.svelte';
-	import { Tile as TileClass } from './../Tile';
+	import { Tile as TileClass } from '$lib/classes/Tile';
+	import type { TileData } from '$lib/types/TileData';
 
 	export let desktop: HTMLDivElement;
 	export let id: number;
-	export let x: number = 0;
-	export let y: number = 0;
+	export let x: number;
+	export let y: number;
 	export let title: string;
-	export let isFocused: boolean = false;
+	export let isFocused: boolean;
 
 	const dispatch = createEventDispatcher();
 
@@ -16,19 +17,12 @@
 	let tileInstance: TileClass;
 
 	const directions = [
-		'top-left',
-		'top-right',
-		'bottom-left',
-		'bottom-right',
-		'top',
-		'bottom',
-		'left',
-		'right'
+		'top-left', 'top-right', 'bottom-left', 'bottom-right',
+		'top', 'bottom', 'left', 'right'
 	];
 
 	onMount(() => {
 		tileInstance = new TileClass(tile, desktop, () => {
-			isFocused = true;
 			dispatch('focus', id);
 		});
 		tile.style.left = `${x}px`;
