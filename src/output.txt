@@ -355,11 +355,15 @@ File: lib/components/Taskbar/Taskbar.svelte
 		isStartMenuVisible = false;
 	}
 
-	function focusWindow(id: number) {
-		dispatch('focusWindow', id);
+	function handleWindowClick(id: number, isMinimized: boolean) {
+		if (isMinimized) {
+			dispatch('restoreWindow', id);
+		} else {
+			dispatch('focusWindow', id);
+		}
 	}
 
-	onMount((): () => void => {
+	onMount((): (() => void) => {
 		document.addEventListener('click', handleClickOutside);
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
@@ -371,10 +375,11 @@ File: lib/components/Taskbar/Taskbar.svelte
 	<button class="start-button" on:click={toggleStartMenu}>Start</button>
 	<div class="window-tabs">
 		{#each tiles as tile (tile.id)}
-			<div 
-				class="window-tab" 
+			<div
+				class="window-tab"
 				class:focused={tile.isFocused}
-				on:click={() => focusWindow(tile.id)}
+				class:minimized={tile.isMinimized}
+				on:click={() => handleWindowClick(tile.id, tile.isMinimized)}
 			>
 				{tile.title}
 			</div>
@@ -382,87 +387,92 @@ File: lib/components/Taskbar/Taskbar.svelte
 	</div>
 </div>
 
-<StartMenu visible={isStartMenuVisible} on:menuItemClick={(event) => handleMenuItemClick(event.detail)} />
+<StartMenu
+	visible={isStartMenuVisible}
+	on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
+/>
 
+<style>
+	.window-tab.minimized {
+		background-color: #a0a0a0;
+	}
+	.taskbar {
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+		height: 28px;
+		background-color: #d4d0c8;
+		display: flex;
+		align-items: center;
+		padding: 0 2px;
+		border-top: 2px solid #ffffff;
+		box-sizing: border-box;
+		z-index: 10000;
+	}
 
-    <style>
-        .taskbar {
-          position: absolute;
-          bottom: 0;
-          width: 100%;
-          height: 28px;
-          background-color: #D4D0C8;
-          display: flex;
-          align-items: center;
-          padding: 0 2px;
-          border-top: 2px solid #ffffff;
-          box-sizing: border-box;
-          z-index: 10000;
-        }
-      
-        .start-button {
-          background: linear-gradient(to bottom, #1fdf25, #0a9710);
-          border: 2px solid #ffffff;
-          border-right-color: #808080;
-          border-bottom-color: #808080;
-          color: white;
-          font-weight: bold;
-          font-size: 11px;
-          padding: 2px 5px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          height: 22px;
-          margin-right: 4px;
-        }
-      
-        .start-button:before {
-          content: '';
-          display: inline-block;
-          width: 16px;
-          height: 16px;
-          background-color: #008080;
-          margin-right: 4px;
-        }
-      
-        .start-button:active {
-          border: 2px solid #808080;
-          border-right-color: #ffffff;
-          border-bottom-color: #ffffff;
-        }
-      
-        .window-tabs {
-          display: flex;
-          flex-grow: 1;
-          overflow-x: auto;
-          height: 100%;
-        }
-      
-        .window-tab {
-          background-color: #D4D0C8;
-          border: 1px solid #808080;
-          border-bottom: none;
-          padding: 2px 8px;
-          margin-right: 2px;
-          cursor: pointer;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 150px;
-          height: 22px;
-          display: flex;
-          align-items: center;
-          font-family: 'Tahoma', sans-serif;
-          font-size: 11px;
-        }
-      
-        .window-tab.focused {
-          background-color: #ffffff;
-          border-top: 2px solid #ffffff;
-          border-left: 2px solid #ffffff;
-          border-right: 2px solid #808080;
-        }
-      </style>
+	.start-button {
+		background: linear-gradient(to bottom, #1fdf25, #0a9710);
+		border: 2px solid #ffffff;
+		border-right-color: #808080;
+		border-bottom-color: #808080;
+		color: white;
+		font-weight: bold;
+		font-size: 11px;
+		padding: 2px 5px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		height: 22px;
+		margin-right: 4px;
+	}
+
+	.start-button:before {
+		content: '';
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		background-color: #008080;
+		margin-right: 4px;
+	}
+
+	.start-button:active {
+		border: 2px solid #808080;
+		border-right-color: #ffffff;
+		border-bottom-color: #ffffff;
+	}
+
+	.window-tabs {
+		display: flex;
+		flex-grow: 1;
+		overflow-x: auto;
+		height: 100%;
+	}
+
+	.window-tab {
+		background-color: #d4d0c8;
+		border: 1px solid #808080;
+		border-bottom: none;
+		padding: 2px 8px;
+		margin-right: 2px;
+		cursor: pointer;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 150px;
+		height: 22px;
+		display: flex;
+		align-items: center;
+		font-family: 'Tahoma', sans-serif;
+		font-size: 11px;
+	}
+
+	.window-tab.focused {
+		background-color: #ffffff;
+		border-top: 2px solid #ffffff;
+		border-left: 2px solid #ffffff;
+		border-right: 2px solid #808080;
+	}
+</style>
 =======================
 File: lib/components/Window/ResizeHandle.svelte
 =======================
@@ -555,58 +565,70 @@ File: lib/components/Window/ResizeHandle.svelte
 File: lib/components/Window/Tile.svelte
 =======================
 <script lang="ts">
-	import { onMount, createEventDispatcher } from 'svelte';
-	import ResizeHandle from './ResizeHandle.svelte';
-	import { Tile as TileClass } from '$lib/classes/Tile';
-	import type { TileData } from '$lib/types/TileData';
+    import { onMount, createEventDispatcher } from 'svelte';
+    import ResizeHandle from './ResizeHandle.svelte';
+    import { Tile as TileClass } from '$lib/classes/Tile';
+    import type { TileData } from '$lib/types/TileData';
 
-	export let desktop: HTMLDivElement;
-	export let id: number;
-	export let x: number;
-	export let y: number;
-	export let title: string;
-	export let isFocused: boolean;
+    export let desktop: HTMLDivElement;
+    export let id: number;
+    export let x: number;
+    export let y: number;
+    export let title: string;
+    export let isFocused: boolean;
+    export let isMinimized: boolean = false;
+    export let zIndex: number;
 
-	const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher();
 
-	let tile: HTMLDivElement;
-	let tileInstance: TileClass;
+    let tile: HTMLDivElement;
+    let tileInstance: TileClass;
 
-	const directions = [
-		'top-left', 'top-right', 'bottom-left', 'bottom-right',
-		'top', 'bottom', 'left', 'right'
-	];
+    const directions = [
+        'top-left', 'top-right', 'bottom-left', 'bottom-right',
+        'top', 'bottom', 'left', 'right'
+    ];
 
-	onMount(() => {
-		tileInstance = new TileClass(tile, desktop, () => {
-			dispatch('focus', id);
-		});
-		tile.style.left = `${x}px`;
-		tile.style.top = `${y}px`;
-	});
+    onMount(() => {
+        tileInstance = new TileClass(tile, desktop, () => {
+            dispatch('focus', id);
+        });
+        tile.style.left = `${x}px`;
+        tile.style.top = `${y}px`;
+    });
 
-	function handleMouseDown(event: MouseEvent) {
-		const titlebar = tile.querySelector('.titlebar');
-		if (titlebar && titlebar.contains(event.target as Node)) {
-			tileInstance.startDragging(event);
-		}
-		tileInstance.focus();
-	}
+    function handleMouseDown(event: MouseEvent) {
+        const titlebar = tile.querySelector('.titlebar');
+        if (titlebar && titlebar.contains(event.target as Node)) {
+            tileInstance.startDragging(event);
+        }
+        tileInstance.focus();
+    }
+
+    function minimize() {
+        dispatch('minimize', id);
+    }
+
+    function close() {
+        dispatch('close', id);
+    }
+
+    $: tile && (tile.style.zIndex = zIndex.toString());
 </script>
 
-<div class="tile" class:focused={isFocused} bind:this={tile} on:mousedown={handleMouseDown}>
-	<div class="titlebar" class:focused={isFocused}>
-		<div class="title">{title}</div>
-		<div class="buttons">
-			<button class="minimize">_</button>
-			<button class="maximize">□</button>
-			<button class="close">X</button>
-		</div>
-	</div>
-	<div class="body">Window Content for {title}</div>
-	{#each directions as direction}
-		<ResizeHandle {direction} />
-	{/each}
+<div class="tile" class:focused={isFocused} class:minimized={isMinimized} bind:this={tile} on:mousedown={handleMouseDown}>
+    <div class="titlebar" class:focused={isFocused}>
+        <div class="title">{title}</div>
+        <div class="buttons">
+            <button class="minimize" on:click={minimize}>_</button>
+            <button class="maximize">□</button>
+            <button class="close" on:click={close}>X</button>
+        </div>
+    </div>
+    <div class="body">Window Content for {title}</div>
+    {#each directions as direction}
+        <ResizeHandle {direction} />
+    {/each}
 </div>
 
 <style>
@@ -628,6 +650,10 @@ File: lib/components/Window/Tile.svelte
 		border-right-color: #808080;
 		border-bottom-color: #808080;
 		box-shadow: 1px 1px 0 #000000;
+	}
+
+    .tile.minimized {
+		display: none;
 	}
 
 	.titlebar {
@@ -686,11 +712,13 @@ File: lib/components/Window/Tile.svelte
 File: lib/types/TileData.ts
 =======================
 export interface TileData {
-	id: number;
-	x: number;
-	y: number;
-	title: string;
-	isFocused: boolean;
+    id: number;
+    x: number;
+    y: number;
+    title: string;
+    isFocused: boolean;
+    isMinimized: boolean;
+    zIndex: number;
 }
 =======================
 File: lib/utils/tileUtils.ts
@@ -698,24 +726,66 @@ File: lib/utils/tileUtils.ts
 import type { TileData } from '$lib/types/TileData';
 
 export function addTile(tiles: TileData[], nextTileId: number, desktop: HTMLDivElement, title: string): TileData[] {
-	const desktopRect = desktop.getBoundingClientRect();
-	const tileWidth = 300;
-	const tileHeight = 200;
+    const desktopRect = desktop.getBoundingClientRect();
+    const tileWidth = 300;
+    const tileHeight = 200;
 
-	const maxX = desktopRect.width - tileWidth;
-	const maxY = desktopRect.height - tileHeight - 28;
-	const x = Math.floor(Math.random() * maxX);
-	const y = Math.floor(Math.random() * maxY);
+    const maxX = desktopRect.width - tileWidth;
+    const maxY = desktopRect.height - tileHeight - 28;
+    const x = Math.floor(Math.random() * maxX);
+    const y = Math.floor(Math.random() * maxY);
 
-	const newTile: TileData = { id: nextTileId, x, y, title, isFocused: true };
-	return [...tiles.map(tile => ({ ...tile, isFocused: false })), newTile];
+    const maxZIndex = Math.max(0, ...tiles.map(tile => tile.zIndex));
+
+    const newTile: TileData = { 
+        id: nextTileId, 
+        x, 
+        y, 
+        title, 
+        isFocused: true, 
+        isMinimized: false, 
+        zIndex: maxZIndex + 1 
+    };
+    return [...tiles.map(tile => ({ ...tile, isFocused: false })), newTile];
 }
 
 export function focusTile(tiles: TileData[], id: number): TileData[] {
-	return tiles.map(tile => ({
-		...tile,
-		isFocused: tile.id === id
-	}));
+    const maxZIndex = Math.max(...tiles.map(tile => tile.zIndex));
+    return tiles.map(tile => ({
+        ...tile,
+        isFocused: tile.id === id && !tile.isMinimized,
+        zIndex: tile.id === id ? maxZIndex + 1 : tile.zIndex
+    }));
+}
+
+export function minimizeTile(tiles: TileData[], id: number): TileData[] {
+    const updatedTiles = tiles.map(tile => 
+        tile.id === id ? { ...tile, isMinimized: true, isFocused: false } : tile
+    );
+    return focusTopmostTile(updatedTiles);
+}
+
+export function restoreTile(tiles: TileData[], id: number): TileData[] {
+    const maxZIndex = Math.max(...tiles.map(tile => tile.zIndex));
+    return tiles.map(tile => 
+        tile.id === id 
+            ? { ...tile, isMinimized: false, isFocused: true, zIndex: maxZIndex + 1 } 
+            : { ...tile, isFocused: false }
+    );
+}
+
+export function focusTopmostTile(tiles: TileData[]): TileData[] {
+    const visibleTiles = tiles.filter(tile => !tile.isMinimized);
+    if (visibleTiles.length === 0) return tiles;
+    
+    const maxZIndex = Math.max(...visibleTiles.map(tile => tile.zIndex));
+    const topmostTileId = visibleTiles.find(tile => tile.zIndex === maxZIndex)!.id;
+    
+    return tiles.map(tile => ({
+        ...tile,
+        isFocused: tile.id === topmostTileId,
+        zIndex: tile.id === topmostTileId ? maxZIndex + 1 : tile.zIndex
+    }));
 }
 =======================
 File: output.txt
@@ -776,52 +846,68 @@ File: routes/+layout.svelte
 File: routes/+page.svelte
 =======================
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
-	import Tile from '$lib/components/Window/Tile.svelte';
-	import type { TileData } from '$lib/types/TileData';
-	import { addTile, focusTile } from '$lib/utils/tileUtils';
+    import { onMount } from 'svelte';
+    import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
+    import Tile from '$lib/components/Window/Tile.svelte';
+    import type { TileData } from '$lib/types/TileData';
+    import { addTile, focusTile, minimizeTile, restoreTile, focusTopmostTile } from '$lib/utils/tileUtils';
 
-	let desktop: HTMLDivElement;
-	let tiles: TileData[] = [];
-	let nextTileId = 0;
+    let desktop: HTMLDivElement;
+    let tiles: TileData[] = [];
+    let nextTileId = 0;
 
-	onMount(() => {
-		// No initial tiles
-	});
+    onMount(() => {
+        // No initial tiles
+    });
 
-	function handleStartMenuItemClick(item: string) {
-		tiles = addTile(tiles, nextTileId++, desktop, item);
-	}
+    function handleStartMenuItemClick(item: string) {
+        tiles = addTile(tiles, nextTileId++, desktop, item);
+    }
 
-	function handleFocusTile(id: number) {
-		tiles = focusTile(tiles, id);
-	}
+    function handleFocusTile(id: number) {
+        tiles = focusTile(tiles, id);
+    }
+
+    function handleMinimizeTile(id: number) {
+        tiles = minimizeTile(tiles, id);
+    }
+
+    function handleRestoreTile(id: number) {
+        tiles = restoreTile(tiles, id);
+    }
+
+    function handleCloseTile(id: number) {
+        tiles = tiles.filter(tile => tile.id !== id);
+        tiles = focusTopmostTile(tiles);
+    }
 </script>
 
 <div class="desktop" bind:this={desktop}>
-	{#each tiles as tile (tile.id)}
-		<Tile 
-			{...tile}
-			{desktop}
-			on:focus={() => handleFocusTile(tile.id)}
-		/>
-	{/each}
-	<Taskbar 
-		on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
-		on:focusWindow={({ detail }) => handleFocusTile(detail)}
-		{tiles}
-	/>
+    {#each tiles as tile (tile.id)}
+        <Tile 
+            {...tile}
+            {desktop}
+            on:focus={() => handleFocusTile(tile.id)}
+            on:minimize={() => handleMinimizeTile(tile.id)}
+            on:close={() => handleCloseTile(tile.id)}
+        />
+    {/each}
+    <Taskbar 
+        on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
+        on:focusWindow={({ detail }) => handleFocusTile(detail)}
+        on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
+        {tiles}
+    />
 </div>
 
 <style>
-	.desktop {
-		width: 100%;
-		height: 100vh;
-		background-color: #008080;
-		position: relative;
-		overflow: hidden;
-	}
+    .desktop {
+        width: 100%;
+        height: 100vh;
+        background-color: #008080;
+        position: relative;
+        overflow: hidden;
+    }
 </style>
 =======================
 File: routes/+page.ts

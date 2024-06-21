@@ -3,7 +3,11 @@
     import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
     import Tile from '$lib/components/Window/Tile.svelte';
     import type { TileData } from '$lib/types/TileData';
-    import { addTile, focusTile, minimizeTile, restoreTile, focusTopmostTile } from '$lib/utils/tileUtils';
+    import { addTile } from '$lib/utils/addTile';
+    import { focusTile } from '$lib/utils/focusTile';
+    import { minimizeTile } from '$lib/utils/minimizeTile';
+    import { restoreTile } from '$lib/utils/restoreTile';
+    import { focusTopmostTile } from '$lib/utils/focusTopmostTile';
 
     let desktop: HTMLDivElement;
     let tiles: TileData[] = [];
