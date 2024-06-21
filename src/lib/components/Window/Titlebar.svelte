@@ -1,28 +1,27 @@
+
+
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
-  
-    export let title: string;
-    export let isFocused: boolean;
-  
-    const dispatch = createEventDispatcher();
-  
-    function handleClose() {
-      dispatch('close');
-    }
-  
-    function handleMinimize() {
-      dispatch('minimize');
-    }
-  </script>
-  
-  <div class="titlebar" class:focused={isFocused}>
-    <div class="title">{title}</div>
-    <div class="buttons">
-      <button class="minimize" on:click={handleMinimize}>_</button>
-      <button class="maximize">□</button>
-      <button class="close" on:click={handleClose}>X</button>
-    </div>
-  </div>
+  import { createEventDispatcher } from 'svelte';
+  import WindowButtons from './WindowButtons.svelte';
+
+  export let title: string;
+  export let isFocused: boolean;
+
+  const dispatch = createEventDispatcher();
+
+  function handleButtonAction(event: CustomEvent) {
+    dispatch(event.type, event.detail);
+  }
+</script>
+
+<div class="titlebar" class:focused={isFocused}>
+  <div class="title">{title}</div>
+  <WindowButtons 
+    on:minimize={handleButtonAction}
+    on:maximize={handleButtonAction}
+    on:close={handleButtonAction}
+  />
+</div>
 
 <style>
   .titlebar {
@@ -41,23 +40,5 @@
   .titlebar.focused {
     background: linear-gradient(to right, #000080, #1084d0);
     color: white;
-  }
-
-  .buttons {
-    display: flex;
-  }
-
-  .buttons button {
-    width: 16px;
-    height: 14px;
-    margin-left: 2px;
-    border: 1px solid #ffffff;
-    background-color: #D4D0C8;
-    color: #000000;
-    font-size: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
   }
 </style>
