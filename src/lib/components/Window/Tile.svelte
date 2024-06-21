@@ -40,11 +40,11 @@
 	  tileInstance.focus();
 	}
   
-	function minimize() {
+	function handleMinimize() {
 	  dispatch('minimize', id);
 	}
   
-	function close() {
+	function handleClose() {
 	  dispatch('close', id);
 	}
   
@@ -52,7 +52,7 @@
   </script>
   
   <div class="tile" class:focused={isFocused} class:minimized={isMinimized} bind:this={tile} on:mousedown={handleMouseDown}>
-	<Titlebar {title} {isFocused} on:click={minimize} on:close={close} />
+	<Titlebar {title} {isFocused} on:minimize={handleMinimize} on:close={handleClose} />
 	<div class="body">Window Content for {title}</div>
 	{#each directions as direction}
 	  <ResizeHandle {direction} />

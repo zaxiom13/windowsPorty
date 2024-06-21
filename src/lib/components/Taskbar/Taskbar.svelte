@@ -62,7 +62,7 @@
 	visible={isStartMenuVisible}
 	on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
   />
-<style>
+  <style>
 	.window-tab.minimized {
 		background-color: #a0a0a0;
 	}

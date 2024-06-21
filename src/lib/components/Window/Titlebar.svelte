@@ -1,16 +1,28 @@
 <script lang="ts">
-  export let title: string;
-  export let isFocused: boolean;
-</script>
-
-<div class="titlebar" class:focused={isFocused}>
-  <div class="title">{title}</div>
-  <div class="buttons">
-    <button class="minimize" on:click>_</button>
-    <button class="maximize">□</button>
-    <button class="close" on:click>X</button>
+    import { createEventDispatcher } from 'svelte';
+  
+    export let title: string;
+    export let isFocused: boolean;
+  
+    const dispatch = createEventDispatcher();
+  
+    function handleClose() {
+      dispatch('close');
+    }
+  
+    function handleMinimize() {
+      dispatch('minimize');
+    }
+  </script>
+  
+  <div class="titlebar" class:focused={isFocused}>
+    <div class="title">{title}</div>
+    <div class="buttons">
+      <button class="minimize" on:click={handleMinimize}>_</button>
+      <button class="maximize">□</button>
+      <button class="close" on:click={handleClose}>X</button>
+    </div>
   </div>
-</div>
 
 <style>
   .titlebar {
