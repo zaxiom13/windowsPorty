@@ -1,69 +1,67 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
 	import StartMenu from './StartMenu.svelte';
+	import TaskbarButton from './TaskbarButton.svelte';
 	import type { TileData } from '$lib/types/TileData';
-
+  
 	const dispatch = createEventDispatcher();
-
+  
 	export let tiles: TileData[] = [];
-
+  
 	let isStartMenuVisible: boolean = false;
-
+  
 	function toggleStartMenu(): void {
-		isStartMenuVisible = !isStartMenuVisible;
+	  isStartMenuVisible = !isStartMenuVisible;
 	}
-
+  
 	function handleClickOutside(event: MouseEvent): void {
-		const startMenu = document.querySelector('.start-menu') as HTMLElement;
-		const startButton = document.querySelector('.start-button') as HTMLElement;
-
-		if (startMenu && startButton && !startButton.contains(event.target as Node)) {
-			isStartMenuVisible = false;
-		}
-	}
-
-	function handleMenuItemClick(item: string) {
-		dispatch('menuItemClick', item);
+	  const startMenu = document.querySelector('.start-menu') as HTMLElement;
+	  const startButton = document.querySelector('.start-button') as HTMLElement;
+  
+	  if (startMenu && startButton && !startButton.contains(event.target as Node)) {
 		isStartMenuVisible = false;
+	  }
 	}
-
+  
+	function handleMenuItemClick(item: string) {
+	  dispatch('menuItemClick', item);
+	  isStartMenuVisible = false;
+	}
+  
 	function handleWindowClick(id: number, isMinimized: boolean) {
-		if (isMinimized) {
-			dispatch('restoreWindow', id);
-		} else {
-			dispatch('focusWindow', id);
-		}
+	  if (isMinimized) {
+		dispatch('restoreWindow', id);
+	  } else {
+		dispatch('focusWindow', id);
+	  }
 	}
-
+  
 	onMount((): (() => void) => {
-		document.addEventListener('click', handleClickOutside);
-		return () => {
-			document.removeEventListener('click', handleClickOutside);
-		};
+	  document.addEventListener('click', handleClickOutside);
+	  return () => {
+		document.removeEventListener('click', handleClickOutside);
+	  };
 	});
-</script>
-
-<div class="taskbar">
+  </script>
+  
+  <div class="taskbar">
 	<button class="start-button" on:click={toggleStartMenu}>Start</button>
 	<div class="window-tabs">
-		{#each tiles as tile (tile.id)}
-			<div
-				class="window-tab"
-				class:focused={tile.isFocused}
-				class:minimized={tile.isMinimized}
-				on:click={() => handleWindowClick(tile.id, tile.isMinimized)}
-			>
-				{tile.title}
-			</div>
-		{/each}
+	  {#each tiles as tile (tile.id)}
+		<TaskbarButton
+		  title={tile.title}
+		  isFocused={tile.isFocused}
+		  isMinimized={tile.isMinimized}
+		  on:click={() => handleWindowClick(tile.id, tile.isMinimized)}
+		/>
+	  {/each}
 	</div>
-</div>
-
-<StartMenu
+  </div>
+  
+  <StartMenu
 	visible={isStartMenuVisible}
 	on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
-/>
-
+  />
 <style>
 	.window-tab.minimized {
 		background-color: #a0a0a0;

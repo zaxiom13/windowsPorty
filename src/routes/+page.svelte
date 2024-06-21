@@ -8,6 +8,7 @@
     import { minimizeTile } from '$lib/utils/minimizeTile';
     import { restoreTile } from '$lib/utils/restoreTile';
     import { focusTopmostTile } from '$lib/utils/focusTopmostTile';
+    import '$lib/styles/desktop.css';
 
     let desktop: HTMLDivElement;
     let tiles: TileData[] = [];
@@ -41,28 +42,18 @@
 
 <div class="desktop" bind:this={desktop}>
     {#each tiles as tile (tile.id)}
-        <Tile 
-            {...tile}
-            {desktop}
-            on:focus={() => handleFocusTile(tile.id)}
-            on:minimize={() => handleMinimizeTile(tile.id)}
-            on:close={() => handleCloseTile(tile.id)}
-        />
+      <Tile 
+        {...tile}
+        {desktop}
+        on:focus={() => handleFocusTile(tile.id)}
+        on:minimize={() => handleMinimizeTile(tile.id)}
+        on:close={() => handleCloseTile(tile.id)}
+      />
     {/each}
     <Taskbar 
-        on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
-        on:focusWindow={({ detail }) => handleFocusTile(detail)}
-        on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
-        {tiles}
+      on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
+      on:focusWindow={({ detail }) => handleFocusTile(detail)}
+      on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
+      {tiles}
     />
-</div>
-
-<style>
-    .desktop {
-        width: 100%;
-        height: 100vh;
-        background-color: #008080;
-        position: relative;
-        overflow: hidden;
-    }
-</style>
+  </div>

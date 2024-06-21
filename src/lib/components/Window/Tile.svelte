@@ -1,70 +1,63 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from 'svelte';
-    import ResizeHandle from './ResizeHandle.svelte';
-    import { Tile as TileClass } from '$lib/classes/Tile';
-    import type { TileData } from '$lib/types/TileData';
-
-    export let desktop: HTMLDivElement;
-    export let id: number;
-    export let x: number;
-    export let y: number;
-    export let title: string;
-    export let isFocused: boolean;
-    export let isMinimized: boolean = false;
-    export let zIndex: number;
-
-    const dispatch = createEventDispatcher();
-
-    let tile: HTMLDivElement;
-    let tileInstance: TileClass;
-
-    const directions = [
-        'top-left', 'top-right', 'bottom-left', 'bottom-right',
-        'top', 'bottom', 'left', 'right'
-    ];
-
-    onMount(() => {
-        tileInstance = new TileClass(tile, desktop, () => {
-            dispatch('focus', id);
-        });
-        tile.style.left = `${x}px`;
-        tile.style.top = `${y}px`;
-    });
-
-    function handleMouseDown(event: MouseEvent) {
-        const titlebar = tile.querySelector('.titlebar');
-        if (titlebar && titlebar.contains(event.target as Node)) {
-            tileInstance.startDragging(event);
-        }
-        tileInstance.focus();
-    }
-
-    function minimize() {
-        dispatch('minimize', id);
-    }
-
-    function close() {
-        dispatch('close', id);
-    }
-
-    $: tile && (tile.style.zIndex = zIndex.toString());
-</script>
-
-<div class="tile" class:focused={isFocused} class:minimized={isMinimized} bind:this={tile} on:mousedown={handleMouseDown}>
-    <div class="titlebar" class:focused={isFocused}>
-        <div class="title">{title}</div>
-        <div class="buttons">
-            <button class="minimize" on:click={minimize}>_</button>
-            <button class="maximize">□</button>
-            <button class="close" on:click={close}>X</button>
-        </div>
-    </div>
-    <div class="body">Window Content for {title}</div>
-    {#each directions as direction}
-        <ResizeHandle {direction} />
-    {/each}
-</div>
-
+	import { onMount, createEventDispatcher } from 'svelte';
+	import ResizeHandle from './ResizeHandle.svelte';
+	import Titlebar from './Titlebar.svelte';
+	import { Tile as TileClass } from '$lib/classes/Tile';
+	import type { TileData } from '$lib/types/TileData';
+  
+	export let desktop: HTMLDivElement;
+	export let id: number;
+	export let x: number;
+	export let y: number;
+	export let title: string;
+	export let isFocused: boolean;
+	export let isMinimized: boolean = false;
+	export let zIndex: number;
+  
+	const dispatch = createEventDispatcher();
+  
+	let tile: HTMLDivElement;
+	let tileInstance: TileClass;
+  
+	const directions = [
+	  'top-left', 'top-right', 'bottom-left', 'bottom-right',
+	  'top', 'bottom', 'left', 'right'
+	];
+  
+	onMount(() => {
+	  tileInstance = new TileClass(tile, desktop, () => {
+		dispatch('focus', id);
+	  });
+	  tile.style.left = `${x}px`;
+	  tile.style.top = `${y}px`;
+	});
+  
+	function handleMouseDown(event: MouseEvent) {
+	  const titlebar = tile.querySelector('.titlebar');
+	  if (titlebar && titlebar.contains(event.target as Node)) {
+		tileInstance.startDragging(event);
+	  }
+	  tileInstance.focus();
+	}
+  
+	function minimize() {
+	  dispatch('minimize', id);
+	}
+  
+	function close() {
+	  dispatch('close', id);
+	}
+  
+	$: tile && (tile.style.zIndex = zIndex.toString());
+  </script>
+  
+  <div class="tile" class:focused={isFocused} class:minimized={isMinimized} bind:this={tile} on:mousedown={handleMouseDown}>
+	<Titlebar {title} {isFocused} on:click={minimize} on:close={close} />
+	<div class="body">Window Content for {title}</div>
+	{#each directions as direction}
+	  <ResizeHandle {direction} />
+	{/each}
+  </div>
 <style>
 	.tile {
 		width: 300px;
