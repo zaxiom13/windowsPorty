@@ -2,6 +2,12 @@
   import Calculator from '../../applications/Calculator.svelte';
   import Notepad from '../../applications/Notepad.svelte';
   import Settings from '../../applications/Settings.svelte';
+  import Paint from '../../applications/Paint.svelte';
+  import FileExplorer from '../../applications/FileExplorer.svelte';
+  import InternetExplorer from '../../applications/InternetExplorer.svelte';
+  import Minesweeper from '../../applications/Minesweeper.svelte';
+  import Solitaire from '../../applications/Solitaire.svelte';
+  import WordPad from '../../applications/WordPad.svelte';
 
   export let title: string;
 </script>
@@ -13,6 +19,18 @@
     <Notepad />
   {:else if title === 'Settings'}
     <Settings />
+  {:else if title === 'Paint'}
+    <Paint />
+  {:else if title === 'File Explorer'}
+    <FileExplorer />
+  {:else if title === 'Internet Explorer'}
+    <InternetExplorer />
+  {:else if title === 'Minesweeper'}
+    <Minesweeper />
+  {:else if title === 'Solitaire'}
+    <Solitaire />
+  {:else if title === 'WordPad'}
+    <WordPad />
   {:else}
     <p>Window Content for {title}</p>
   {/if}

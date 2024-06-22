@@ -54,25 +54,30 @@ File: directory_structure.txt
 ├── complete_output.sh
 ├── directory_structure.txt
 lib
+applications
+├── Calculator.svelte
+├── Notepad.svelte
+└── Settings.svelte
 classes
 ├── Tile.ts
 └── TileManager.ts
 components
+Desktop
+└── Desktop.svelte
 Taskbar
 ├── StartButton.svelte
 ├── StartMenu.svelte
 ├── Taskbar.svelte
 └── TaskbarButton.svelte
 Window
-├── backgroundColorStore.ts
-├── Calculator.svelte
-├── Notepad.svelte
 ├── ResizeHandle.svelte
-├── Settings.svelte
 ├── Tile.svelte
 ├── Titlebar.svelte
 ├── WindowButtons.svelte
 └── WindowContent.svelte
+stores
+├── backgroundColorStore.ts
+└── tilesStore.ts
 styles
 └── desktop.css
 types
@@ -82,7 +87,8 @@ utils
 ├── focusTile.ts
 ├── focusTopmostTile.ts
 ├── minimizeTile.ts
-└── restoreTile.ts
+├── restoreTile.ts
+└── windowUtils.ts
 ├── output.txt
 ├── repo_to_txt.sh
 routes
@@ -93,9 +99,221 @@ routes
 └── show_tree.sh
 
 =======================
+File: lib/applications/Calculator.svelte
+=======================
+<script lang="ts">
+    let display = '0';
+    let currentOperation = '';
+    let previousValue = 0;
+  
+    function handleButtonClick(value: string) {
+      if (value === 'C') {
+        display = '0';
+        currentOperation = '';
+        previousValue = 0;
+      } else if (value === '=') {
+        calculate();
+      } else if (['+', '-', '*', '/'].includes(value)) {
+        currentOperation = value;
+        previousValue = parseFloat(display);
+        display = '0';
+      } else {
+        display = display === '0' ? value : display + value;
+      }
+    }
+  
+    function calculate() {
+      const currentValue = parseFloat(display);
+      let result = 0;
+      switch (currentOperation) {
+        case '+':
+          result = previousValue + currentValue;
+          break;
+        case '-':
+          result = previousValue - currentValue;
+          break;
+        case '*':
+          result = previousValue * currentValue;
+          break;
+        case '/':
+          result = previousValue / currentValue;
+          break;
+      }
+      display = result.toString();
+      currentOperation = '';
+    }
+  </script>
+  
+  <div class="calculator">
+    <div class="display">{display}</div>
+    <div class="buttons">
+      {#each ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', 'C', '=', '+'] as button}
+        <button on:click={() => handleButtonClick(button)}>{button}</button>
+      {/each}
+    </div>
+  </div>
+  
+  <style>
+    .calculator {
+      width: 200px;
+      margin: 10px auto;
+      background-color: #d4d0c8;
+      border: 2px solid #808080;
+      border-top-color: #ffffff;
+      border-left-color: #ffffff;
+    }
+    .display {
+      background-color: #ffffff;
+      border: 1px solid #808080;
+      margin: 5px;
+      padding: 5px;
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      padding: 5px;
+    }
+    button {
+      background-color: #d4d0c8;
+      border: 2px solid #808080;
+      border-top-color: #ffffff;
+      border-left-color: #ffffff;
+      padding: 5px;
+      font-family: 'Tahoma', sans-serif;
+      font-size: 12px;
+    }
+    button:active {
+      border: 2px solid #808080;
+      border-bottom-color: #ffffff;
+      border-right-color: #ffffff;
+    }
+  </style>
+=======================
+File: lib/applications/Notepad.svelte
+=======================
+<script lang="ts">
+    let text = '';
+  </script>
+  
+  <div class="notepad">
+    <textarea bind:value={text} placeholder="Type your text here..."></textarea>
+  </div>
+  
+  <style>
+    .notepad {
+      width: 100%;
+      height: 100%;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    textarea {
+      width: 100%;
+      height: 100%;
+      resize: none;
+      border: 1px solid #808080;
+      background-color: #ffffff;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+  </style>
+=======================
+File: lib/applications/Settings.svelte
+=======================
+<script lang="ts">
+    import { backgroundColor } from '../stores/backgroundColorStore';
+    
+    let soundEnabled = true;
+    let screenSaverTimeout = 15;
+  
+    function handleApply() {
+      // In a real application, you might want to save these settings to some persistent storage
+      console.log('Settings applied');
+    }
+  </script>
+  
+  <div class="settings">
+    <h2>Display Settings</h2>
+    <div class="setting">
+      <label for="background-color">Background Color:</label>
+      <input type="color" id="background-color" bind:value={$backgroundColor}>
+    </div>
+  
+    <h2>Sound Settings</h2>
+    <div class="setting">
+      <label>
+        <input type="checkbox" bind:checked={soundEnabled}>
+        Enable System Sounds
+      </label>
+    </div>
+  
+    <h2>Screen Saver</h2>
+    <div class="setting">
+      <label for="screensaver-timeout">Wait</label>
+      <input type="number" id="screensaver-timeout" bind:value={screenSaverTimeout} min="1" max="60">
+      <span>minutes</span>
+    </div>
+  
+    <button class="apply-button" on:click={handleApply}>Apply</button>
+  </div>
+  
+  <style>
+    .settings {
+      padding: 10px;
+      font-family: 'Tahoma', sans-serif;
+      font-size: 11px;
+    }
+    h2 {
+      font-size: 14px;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    .setting {
+      margin-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 150px;
+    }
+    input[type="color"] {
+      width: 50px;
+      height: 20px;
+      border: 1px solid #808080;
+    }
+    input[type="number"] {
+      width: 40px;
+    }
+    .apply-button {
+      background-color: #d4d0c8;
+      border: 2px solid #808080;
+      border-top-color: #ffffff;
+      border-left-color: #ffffff;
+      padding: 5px 10px;
+      font-family: 'Tahoma', sans-serif;
+      font-size: 11px;
+      margin-top: 10px;
+    }
+    .apply-button:active {
+      border: 2px solid #808080;
+      border-bottom-color: #ffffff;
+      border-right-color: #ffffff;
+    }
+  </style>
+=======================
 File: lib/classes/Tile.ts
 =======================
 import { tileManager } from './TileManager.ts';
+import { 
+  calculateWindowPosition, 
+  constrainWindowPosition, 
+  calculateResizedDimensions 
+} from '../utils/windowUtils';
+
 
 export class Tile {
     private tile: HTMLDivElement;
@@ -110,13 +328,16 @@ export class Tile {
     private initialHeight!: number;
     private resizeDirection!: string;
     private onFocus: () => void;
-
     constructor(tile: HTMLDivElement, desktop: HTMLDivElement, onFocus: () => void) {
         this.tile = tile;
         this.desktop = desktop;
         this.onFocus = onFocus;
         tileManager.registerTile(this.tile);
         this.initializeEventListeners();
+
+        const { x, y } = calculateWindowPosition(this.desktop, this.tile.clientWidth, this.tile.clientHeight);
+        this.tile.style.left = `${x}px`;
+        this.tile.style.top = `${y}px`;
     }
 
     private initializeEventListeners() {
@@ -171,14 +392,13 @@ export class Tile {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
 
-        let newX = this.initialX + dx;
-        let newY = this.initialY + dy;
-
-        const desktopRect = this.desktop.getBoundingClientRect();
-        const tileRect = this.tile.getBoundingClientRect();
-
-        newX = Math.max(0, Math.min(newX, desktopRect.width - tileRect.width));
-        newY = Math.max(0, Math.min(newY, desktopRect.height - tileRect.height));
+        const { x: newX, y: newY } = constrainWindowPosition(
+            this.initialX + dx,
+            this.initialY + dy,
+            this.tile.clientWidth,
+            this.tile.clientHeight,
+            this.desktop
+        );
 
         this.tile.style.left = `${newX}px`;
         this.tile.style.top = `${newY}px`;
@@ -187,45 +407,20 @@ export class Tile {
     private handleResizing(event: MouseEvent) {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
-    
-        const desktopRect = this.desktop.getBoundingClientRect();
-        const minWidth = 100;
-        const minHeight = 100;
-        const maxWidth = 500;
-        const maxHeight = 500;
-    
-        let newWidth = this.initialWidth;
-        let newHeight = this.initialHeight;
-        let newX = this.initialX;
-        let newY = this.initialY;
-    
-        if (this.resizeDirection.includes('right')) {
-            newWidth = Math.min(
-                Math.max(minWidth, this.initialWidth + dx),
-                desktopRect.width - this.initialX,
-                maxWidth
-            );
-        }
-        if (this.resizeDirection.includes('bottom')) {
-            newHeight = Math.min(
-                Math.max(minHeight, this.initialHeight + dy),
-                desktopRect.height - this.initialY,
-                maxHeight
-            );
-        }
-        if (this.resizeDirection.includes('left')) {
-            const maxLeftMove = Math.min(this.initialWidth - minWidth, this.initialX);
-            const leftMove = Math.max(-maxLeftMove, Math.min(dx, this.initialWidth - minWidth));
-            newWidth = Math.min(this.initialWidth - leftMove, maxWidth);
-            newX = this.initialX + this.initialWidth - newWidth;
-        }
-        if (this.resizeDirection.includes('top')) {
-            const maxTopMove = Math.min(this.initialHeight - minHeight, this.initialY);
-            const topMove = Math.max(-maxTopMove, Math.min(dy, this.initialHeight - minHeight));
-            newHeight = Math.min(this.initialHeight - topMove, maxHeight);
-            newY = this.initialY + this.initialHeight - newHeight;
-        }
-    
+
+        const { newWidth, newHeight, newX, newY } = calculateResizedDimensions(
+            this.resizeDirection,
+            this.startX,
+            this.startY,
+            this.initialWidth,
+            this.initialHeight,
+            this.initialX,
+            this.initialY,
+            dx,
+            dy,
+            this.desktop
+        );
+
         this.tile.style.width = `${newWidth}px`;
         this.tile.style.height = `${newHeight}px`;
         this.tile.style.left = `${newX}px`;
@@ -275,6 +470,54 @@ class TileManager {
   
   export const tileManager = TileManager.getInstance();
   
+=======================
+File: lib/components/Desktop/Desktop.svelte
+=======================
+<script lang="ts">
+    import { onMount } from 'svelte';
+    import Taskbar from '../Taskbar/Taskbar.svelte';
+    import Tile from '../Window/Tile.svelte';
+    import { tilesStore } from '$lib/stores/tilesStore';
+    import { backgroundColor } from '$lib/stores/backgroundColorStore';
+    import '$lib/styles/desktop.css';
+  
+    export let startMenuItems: string[] = [];
+  
+    let desktop: HTMLDivElement;
+  
+    function handleStartMenuItemClick(item: string) {
+      tilesStore.add(desktop, item);
+    }
+  
+    onMount(() => {
+      // Any initialization logic can go here
+    });
+  </script>
+  
+  <div class="desktop" bind:this={desktop} style:background-color={$backgroundColor}>
+    {#each $tilesStore as tile (tile.id)}
+      <Tile 
+        {...tile}
+        {desktop}
+        on:focus={() => tilesStore.focus(tile.id)}
+        on:minimize={() => tilesStore.minimize(tile.id)}
+        on:close={() => tilesStore.close(tile.id)}
+      />
+    {/each}
+    <Taskbar 
+      on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
+      {startMenuItems}
+    />
+  </div>
+  
+  <style>
+    .desktop {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+  </style>
 =======================
 File: lib/components/Taskbar/StartButton.svelte
 =======================
@@ -389,15 +632,14 @@ File: lib/components/Taskbar/StartMenu.svelte
 File: lib/components/Taskbar/Taskbar.svelte
 =======================
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import StartButton from './StartButton.svelte';
   import StartMenu from './StartMenu.svelte';
   import TaskbarButton from './TaskbarButton.svelte';
-  import type { TileData } from '$lib/types/TileData';
+  import { tilesStore } from '$lib/stores/tilesStore';
 
   const dispatch = createEventDispatcher();
 
-  export let tiles: TileData[] = [];
   export let startMenuItems: string[] = [];
 
   let isStartMenuVisible: boolean = false;
@@ -421,19 +663,25 @@ File: lib/components/Taskbar/Taskbar.svelte
   }
 
   function handleWindowClick(id: number, isMinimized: boolean) {
-    dispatch(isMinimized ? 'restoreWindow' : 'focusWindow', id);
+    if (isMinimized) {
+      tilesStore.restore(id);
+    } else {
+      tilesStore.focus(id);
+    }
   }
 
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 </script>
 
 <div class="taskbar">
   <StartButton on:click={toggleStartMenu} />
   <div class="window-tabs">
-    {#each tiles as tile (tile.id)}
+    {#each $tilesStore as tile (tile.id)}
       <TaskbarButton
         title={tile.title}
         isFocused={tile.isFocused}
@@ -522,135 +770,6 @@ File: lib/components/Taskbar/TaskbarButton.svelte
   }
 </style>
 =======================
-File: lib/components/Window/backgroundColorStore.ts
-=======================
-import { writable } from 'svelte/store';
-
-export const backgroundColor = writable('#008080');
-=======================
-File: lib/components/Window/Calculator.svelte
-=======================
-<script lang="ts">
-    let display = '0';
-    let currentOperation = '';
-    let previousValue = 0;
-  
-    function handleButtonClick(value: string) {
-      if (value === 'C') {
-        display = '0';
-        currentOperation = '';
-        previousValue = 0;
-      } else if (value === '=') {
-        calculate();
-      } else if (['+', '-', '*', '/'].includes(value)) {
-        currentOperation = value;
-        previousValue = parseFloat(display);
-        display = '0';
-      } else {
-        display = display === '0' ? value : display + value;
-      }
-    }
-  
-    function calculate() {
-      const currentValue = parseFloat(display);
-      let result = 0;
-      switch (currentOperation) {
-        case '+':
-          result = previousValue + currentValue;
-          break;
-        case '-':
-          result = previousValue - currentValue;
-          break;
-        case '*':
-          result = previousValue * currentValue;
-          break;
-        case '/':
-          result = previousValue / currentValue;
-          break;
-      }
-      display = result.toString();
-      currentOperation = '';
-    }
-  </script>
-  
-  <div class="calculator">
-    <div class="display">{display}</div>
-    <div class="buttons">
-      {#each ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', 'C', '=', '+'] as button}
-        <button on:click={() => handleButtonClick(button)}>{button}</button>
-      {/each}
-    </div>
-  </div>
-  
-  <style>
-    .calculator {
-      width: 200px;
-      margin: 10px auto;
-      background-color: #d4d0c8;
-      border: 2px solid #808080;
-      border-top-color: #ffffff;
-      border-left-color: #ffffff;
-    }
-    .display {
-      background-color: #ffffff;
-      border: 1px solid #808080;
-      margin: 5px;
-      padding: 5px;
-      text-align: right;
-      font-family: 'Courier New', monospace;
-    }
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2px;
-      padding: 5px;
-    }
-    button {
-      background-color: #d4d0c8;
-      border: 2px solid #808080;
-      border-top-color: #ffffff;
-      border-left-color: #ffffff;
-      padding: 5px;
-      font-family: 'Tahoma', sans-serif;
-      font-size: 12px;
-    }
-    button:active {
-      border: 2px solid #808080;
-      border-bottom-color: #ffffff;
-      border-right-color: #ffffff;
-    }
-  </style>
-=======================
-File: lib/components/Window/Notepad.svelte
-=======================
-<script lang="ts">
-    let text = '';
-  </script>
-  
-  <div class="notepad">
-    <textarea bind:value={text} placeholder="Type your text here..."></textarea>
-  </div>
-  
-  <style>
-    .notepad {
-      width: 100%;
-      height: 100%;
-      padding: 5px;
-      box-sizing: border-box;
-    }
-    textarea {
-      width: 100%;
-      height: 100%;
-      resize: none;
-      border: 1px solid #808080;
-      background-color: #ffffff;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      padding: 5px;
-      box-sizing: border-box;
-    }
-  </style>
-=======================
 File: lib/components/Window/ResizeHandle.svelte
 =======================
 <script lang="ts">
@@ -738,89 +857,6 @@ File: lib/components/Window/ResizeHandle.svelte
   on:mousedown
 ></div>
 
-=======================
-File: lib/components/Window/Settings.svelte
-=======================
-<script lang="ts">
-    import { backgroundColor } from './backgroundColorStore';
-    
-    let soundEnabled = true;
-    let screenSaverTimeout = 15;
-  
-    function handleApply() {
-      // In a real application, you might want to save these settings to some persistent storage
-      console.log('Settings applied');
-    }
-  </script>
-  
-  <div class="settings">
-    <h2>Display Settings</h2>
-    <div class="setting">
-      <label for="background-color">Background Color:</label>
-      <input type="color" id="background-color" bind:value={$backgroundColor}>
-    </div>
-  
-    <h2>Sound Settings</h2>
-    <div class="setting">
-      <label>
-        <input type="checkbox" bind:checked={soundEnabled}>
-        Enable System Sounds
-      </label>
-    </div>
-  
-    <h2>Screen Saver</h2>
-    <div class="setting">
-      <label for="screensaver-timeout">Wait</label>
-      <input type="number" id="screensaver-timeout" bind:value={screenSaverTimeout} min="1" max="60">
-      <span>minutes</span>
-    </div>
-  
-    <button class="apply-button" on:click={handleApply}>Apply</button>
-  </div>
-  
-  <style>
-    .settings {
-      padding: 10px;
-      font-family: 'Tahoma', sans-serif;
-      font-size: 11px;
-    }
-    h2 {
-      font-size: 14px;
-      margin-top: 15px;
-      margin-bottom: 5px;
-      border-bottom: 1px solid #808080;
-    }
-    .setting {
-      margin-bottom: 10px;
-    }
-    label {
-      display: inline-block;
-      width: 150px;
-    }
-    input[type="color"] {
-      width: 50px;
-      height: 20px;
-      border: 1px solid #808080;
-    }
-    input[type="number"] {
-      width: 40px;
-    }
-    .apply-button {
-      background-color: #d4d0c8;
-      border: 2px solid #808080;
-      border-top-color: #ffffff;
-      border-left-color: #ffffff;
-      padding: 5px 10px;
-      font-family: 'Tahoma', sans-serif;
-      font-size: 11px;
-      margin-top: 10px;
-    }
-    .apply-button:active {
-      border: 2px solid #808080;
-      border-bottom-color: #ffffff;
-      border-right-color: #ffffff;
-    }
-  </style>
 =======================
 File: lib/components/Window/Tile.svelte
 =======================
@@ -1013,9 +1049,9 @@ File: lib/components/Window/WindowButtons.svelte
 File: lib/components/Window/WindowContent.svelte
 =======================
 <script lang="ts">
-  import Calculator from './Calculator.svelte';
-  import Notepad from './Notepad.svelte';
-  import Settings from './Settings.svelte';
+  import Calculator from '../../applications/Calculator.svelte';
+  import Notepad from '../../applications/Notepad.svelte';
+  import Settings from '../../applications/Settings.svelte';
 
   export let title: string;
 </script>
@@ -1046,6 +1082,50 @@ File: lib/components/Window/WindowContent.svelte
     overflow: auto;
   }
 </style>
+=======================
+File: lib/stores/backgroundColorStore.ts
+=======================
+import { writable } from 'svelte/store';
+
+export const backgroundColor = writable('#008080');
+=======================
+File: lib/stores/tilesStore.ts
+=======================
+import { writable } from 'svelte/store';
+import type { TileData } from '../types/TileData';
+import { addTile } from '../utils/addTile';
+import { focusTile } from '../utils/focusTile';
+import { minimizeTile } from '../utils/minimizeTile';
+import { restoreTile } from '../utils/restoreTile';
+import { focusTopmostTile } from '../utils/focusTopmostTile';
+
+function createTilesStore() {
+    const { subscribe, update } = writable<TileData[]>([]);
+    let nextTileId = 0;
+
+    return {
+        subscribe,
+        add: (desktop: HTMLDivElement, title: string) => update(tiles => 
+            addTile(tiles, nextTileId++, desktop, title)
+        ),
+        focus: (id: number) => update(tiles => 
+            focusTile(tiles, id)
+        ),
+        minimize: (id: number) => update(tiles => 
+            minimizeTile(tiles, id)
+        ),
+        restore: (id: number) => update(tiles => 
+            restoreTile(tiles, id)
+        ),
+        close: (id: number) => update(tiles => {
+            const updatedTiles = tiles.filter(tile => tile.id !== id);
+            return focusTopmostTile(updatedTiles);
+        }),
+        focusTopmost: () => update(focusTopmostTile)
+    };
+}
+
+export const tilesStore = createTilesStore();
 =======================
 File: lib/styles/desktop.css
 =======================
@@ -1160,6 +1240,91 @@ export function restoreTile(tiles: TileData[], id: number): TileData[] {
     );
 }
 =======================
+File: lib/utils/windowUtils.ts
+=======================
+// src/lib/utils/windowUtils.ts
+
+export function calculateWindowPosition(desktop: HTMLElement, width: number, height: number) {
+    const desktopRect = desktop.getBoundingClientRect();
+    const maxX = desktopRect.width - width;
+    const maxY = desktopRect.height - height - 28; // Subtract taskbar height
+  
+    const x = Math.floor(Math.random() * maxX);
+    const y = Math.floor(Math.random() * maxY);
+  
+    return { x, y };
+  }
+  
+  export function constrainWindowPosition(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    desktop: HTMLElement
+  ) {
+    const desktopRect = desktop.getBoundingClientRect();
+    const maxX = desktopRect.width - width;
+    const maxY = desktopRect.height - height - 28; // Subtract taskbar height
+  
+    return {
+      x: Math.max(0, Math.min(x, maxX)),
+      y: Math.max(0, Math.min(y, maxY)),
+    };
+  }
+  
+  export function calculateResizedDimensions(
+    direction: string,
+    startX: number,
+    startY: number,
+    initialWidth: number,
+    initialHeight: number,
+    initialX: number,
+    initialY: number,
+    dx: number,
+    dy: number,
+    desktop: HTMLElement
+  ) {
+    const desktopRect = desktop.getBoundingClientRect();
+    const minWidth = 100;
+    const minHeight = 100;
+    const maxWidth = 500;
+    const maxHeight = 500;
+  
+    let newWidth = initialWidth;
+    let newHeight = initialHeight;
+    let newX = initialX;
+    let newY = initialY;
+  
+    if (direction.includes('right')) {
+      newWidth = Math.min(
+        Math.max(minWidth, initialWidth + dx),
+        desktopRect.width - initialX,
+        maxWidth
+      );
+    }
+    if (direction.includes('bottom')) {
+      newHeight = Math.min(
+        Math.max(minHeight, initialHeight + dy),
+        desktopRect.height - initialY - 28,
+        maxHeight
+      );
+    }
+    if (direction.includes('left')) {
+      const maxLeftMove = Math.min(initialWidth - minWidth, initialX);
+      const leftMove = Math.max(-maxLeftMove, Math.min(dx, initialWidth - minWidth));
+      newWidth = Math.min(initialWidth - leftMove, maxWidth);
+      newX = initialX + initialWidth - newWidth;
+    }
+    if (direction.includes('top')) {
+      const maxTopMove = Math.min(initialHeight - minHeight, initialY);
+      const topMove = Math.max(-maxTopMove, Math.min(dy, initialHeight - minHeight));
+      newHeight = Math.min(initialHeight - topMove, maxHeight);
+      newY = initialY + initialHeight - newHeight;
+    }
+  
+    return { newWidth, newHeight, newX, newY };
+  }
+=======================
 File: output.txt
 =======================
 
@@ -1218,68 +1383,12 @@ File: routes/+layout.svelte
 File: routes/+page.svelte
 =======================
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
-  import Tile from '$lib/components/Window/Tile.svelte';
-  import type { TileData } from '$lib/types/TileData';
-  import { addTile } from '$lib/utils/addTile';
-  import { focusTile } from '$lib/utils/focusTile';
-  import { minimizeTile } from '$lib/utils/minimizeTile';
-  import { restoreTile } from '$lib/utils/restoreTile';
-  import { focusTopmostTile } from '$lib/utils/focusTopmostTile';
-  import { backgroundColor } from '$lib/components/Window/backgroundColorStore';
-  import '$lib/styles/desktop.css';
-
-  let desktop: HTMLDivElement;
-  let tiles: TileData[] = [];
-  let nextTileId = 0;
-
-  onMount(() => {
-    // No initial tiles
-  });
-
-  function handleStartMenuItemClick(item: string) {
-    tiles = addTile(tiles, nextTileId++, desktop, item);
-  }
-
-  function handleFocusTile(id: number) {
-    tiles = focusTile(tiles, id);
-  }
-
-  function handleMinimizeTile(id: number) {
-    tiles = minimizeTile(tiles, id);
-  }
-
-  function handleRestoreTile(id: number) {
-    tiles = restoreTile(tiles, id);
-  }
-
-  function handleCloseTile(id: number) {
-    tiles = tiles.filter(tile => tile.id !== id);
-    tiles = focusTopmostTile(tiles);
-  }
+  import Desktop from '$lib/components/Desktop/Desktop.svelte';
 
   const startMenuItems = ['Calculator', 'Notepad', 'Settings'];
 </script>
 
-<div class="desktop" bind:this={desktop} style:background-color={$backgroundColor}>
-  {#each tiles as tile (tile.id)}
-    <Tile 
-      {...tile}
-      {desktop}
-      on:focus={() => handleFocusTile(tile.id)}
-      on:minimize={() => handleMinimizeTile(tile.id)}
-      on:close={() => handleCloseTile(tile.id)}
-    />
-  {/each}
-  <Taskbar 
-    on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
-    on:focusWindow={({ detail }) => handleFocusTile(detail)}
-    on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
-    {tiles}
-    {startMenuItems}
-  />
-</div>
+<Desktop {startMenuItems} />
 =======================
 File: routes/+page.ts
 =======================
