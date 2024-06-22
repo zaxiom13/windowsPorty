@@ -1,4 +1,10 @@
 import { tileManager } from './TileManager.ts';
+import { 
+  calculateWindowPosition, 
+  constrainWindowPosition, 
+  calculateResizedDimensions 
+} from '../utils/windowUtils';
+
 
 export class Tile {
     private tile: HTMLDivElement;
@@ -13,13 +19,16 @@ export class Tile {
     private initialHeight!: number;
     private resizeDirection!: string;
     private onFocus: () => void;
-
     constructor(tile: HTMLDivElement, desktop: HTMLDivElement, onFocus: () => void) {
         this.tile = tile;
         this.desktop = desktop;
         this.onFocus = onFocus;
         tileManager.registerTile(this.tile);
         this.initializeEventListeners();
+
+        const { x, y } = calculateWindowPosition(this.desktop, this.tile.clientWidth, this.tile.clientHeight);
+        this.tile.style.left = `${x}px`;
+        this.tile.style.top = `${y}px`;
     }
 
     private initializeEventListeners() {
@@ -74,14 +83,13 @@ export class Tile {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
 
-        let newX = this.initialX + dx;
-        let newY = this.initialY + dy;
-
-        const desktopRect = this.desktop.getBoundingClientRect();
-        const tileRect = this.tile.getBoundingClientRect();
-
-        newX = Math.max(0, Math.min(newX, desktopRect.width - tileRect.width));
-        newY = Math.max(0, Math.min(newY, desktopRect.height - tileRect.height));
+        const { x: newX, y: newY } = constrainWindowPosition(
+            this.initialX + dx,
+            this.initialY + dy,
+            this.tile.clientWidth,
+            this.tile.clientHeight,
+            this.desktop
+        );
 
         this.tile.style.left = `${newX}px`;
         this.tile.style.top = `${newY}px`;
@@ -90,45 +98,20 @@ export class Tile {
     private handleResizing(event: MouseEvent) {
         const dx = event.clientX - this.startX;
         const dy = event.clientY - this.startY;
-    
-        const desktopRect = this.desktop.getBoundingClientRect();
-        const minWidth = 100;
-        const minHeight = 100;
-        const maxWidth = 500;
-        const maxHeight = 500;
-    
-        let newWidth = this.initialWidth;
-        let newHeight = this.initialHeight;
-        let newX = this.initialX;
-        let newY = this.initialY;
-    
-        if (this.resizeDirection.includes('right')) {
-            newWidth = Math.min(
-                Math.max(minWidth, this.initialWidth + dx),
-                desktopRect.width - this.initialX,
-                maxWidth
-            );
-        }
-        if (this.resizeDirection.includes('bottom')) {
-            newHeight = Math.min(
-                Math.max(minHeight, this.initialHeight + dy),
-                desktopRect.height - this.initialY,
-                maxHeight
-            );
-        }
-        if (this.resizeDirection.includes('left')) {
-            const maxLeftMove = Math.min(this.initialWidth - minWidth, this.initialX);
-            const leftMove = Math.max(-maxLeftMove, Math.min(dx, this.initialWidth - minWidth));
-            newWidth = Math.min(this.initialWidth - leftMove, maxWidth);
-            newX = this.initialX + this.initialWidth - newWidth;
-        }
-        if (this.resizeDirection.includes('top')) {
-            const maxTopMove = Math.min(this.initialHeight - minHeight, this.initialY);
-            const topMove = Math.max(-maxTopMove, Math.min(dy, this.initialHeight - minHeight));
-            newHeight = Math.min(this.initialHeight - topMove, maxHeight);
-            newY = this.initialY + this.initialHeight - newHeight;
-        }
-    
+
+        const { newWidth, newHeight, newX, newY } = calculateResizedDimensions(
+            this.resizeDirection,
+            this.startX,
+            this.startY,
+            this.initialWidth,
+            this.initialHeight,
+            this.initialX,
+            this.initialY,
+            dx,
+            dy,
+            this.desktop
+        );
+
         this.tile.style.width = `${newWidth}px`;
         this.tile.style.height = `${newHeight}px`;
         this.tile.style.left = `${newX}px`;
