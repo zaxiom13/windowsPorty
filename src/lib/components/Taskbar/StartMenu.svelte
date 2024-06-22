@@ -2,10 +2,10 @@
   import { createEventDispatcher } from 'svelte';
 
   export let visible: boolean = false;
-
+  
   const dispatch = createEventDispatcher();
 
-  const menuItems = [
+  export let items = [
     "Programs",
     "Documents",
     "Settings",
@@ -53,7 +53,7 @@
 </style>
 
 <div class="start-menu {visible ? 'visible' : ''}">
-  {#each menuItems as item}
+  {#each items as item}
     <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
   {/each}
 </div>

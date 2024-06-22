@@ -8,6 +8,7 @@
   const dispatch = createEventDispatcher();
 
   export let tiles: TileData[] = [];
+  export let startMenuItems: string[] = [];
 
   let isStartMenuVisible: boolean = false;
 
@@ -55,6 +56,7 @@
 
 <StartMenu
   visible={isStartMenuVisible}
+  items={startMenuItems}
   on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
 />
 

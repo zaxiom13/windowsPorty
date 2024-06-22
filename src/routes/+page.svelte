@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { onMount } from 'svelte';
   import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
@@ -9,6 +8,7 @@
   import { minimizeTile } from '$lib/utils/minimizeTile';
   import { restoreTile } from '$lib/utils/restoreTile';
   import { focusTopmostTile } from '$lib/utils/focusTopmostTile';
+  import { backgroundColor } from '$lib/components/Window/backgroundColorStore';
   import '$lib/styles/desktop.css';
 
   let desktop: HTMLDivElement;
@@ -39,9 +39,11 @@
     tiles = tiles.filter(tile => tile.id !== id);
     tiles = focusTopmostTile(tiles);
   }
+
+  const startMenuItems = ['Calculator', 'Notepad', 'Settings'];
 </script>
 
-<div class="desktop" bind:this={desktop}>
+<div class="desktop" bind:this={desktop} style:background-color={$backgroundColor}>
   {#each tiles as tile (tile.id)}
     <Tile 
       {...tile}
@@ -56,5 +58,6 @@
     on:focusWindow={({ detail }) => handleFocusTile(detail)}
     on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
     {tiles}
+    {startMenuItems}
   />
 </div>

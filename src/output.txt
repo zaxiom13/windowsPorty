@@ -59,15 +59,26 @@ classes
 └── TileManager.ts
 components
 Taskbar
+├── StartButton.svelte
 ├── StartMenu.svelte
-└── Taskbar.svelte
+├── Taskbar.svelte
+└── TaskbarButton.svelte
 Window
 ├── ResizeHandle.svelte
-└── Tile.svelte
+├── Tile.svelte
+├── Titlebar.svelte
+├── WindowButtons.svelte
+└── WindowContent.svelte
+styles
+└── desktop.css
 types
 └── TileData.ts
 utils
-└── tileUtils.ts
+├── addTile.ts
+├── focusTile.ts
+├── focusTopmostTile.ts
+├── minimizeTile.ts
+└── restoreTile.ts
 ├── output.txt
 ├── repo_to_txt.sh
 routes
@@ -75,8 +86,7 @@ routes
 ├── +page.svelte
 ├── +page.ts
 └── styles.css
-├── show_tree.sh
-└── Tile.ts
+└── show_tree.sh
 
 =======================
 File: lib/classes/Tile.ts
@@ -262,6 +272,54 @@ class TileManager {
   export const tileManager = TileManager.getInstance();
   
 =======================
+File: lib/components/Taskbar/StartButton.svelte
+=======================
+
+<script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
+
+  function handleClick() {
+    dispatch('click');
+  }
+</script>
+
+<button class="start-button" on:click={handleClick}>Start</button>
+
+<style>
+  .start-button {
+    background: linear-gradient(to bottom, #1fdf25, #0a9710);
+    border: 2px solid #ffffff;
+    border-right-color: #808080;
+    border-bottom-color: #808080;
+    color: white;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 2px 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    height: 22px;
+    margin-right: 4px;
+  }
+
+  .start-button:before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #008080;
+    margin-right: 4px;
+  }
+
+  .start-button:active {
+    border: 2px solid #808080;
+    border-right-color: #ffffff;
+    border-bottom-color: #ffffff;
+  }
+</style>
+=======================
 File: lib/components/Taskbar/StartMenu.svelte
 =======================
 <script lang="ts">
@@ -327,151 +385,135 @@ File: lib/components/Taskbar/StartMenu.svelte
 File: lib/components/Taskbar/Taskbar.svelte
 =======================
 <script lang="ts">
-	import { onMount, createEventDispatcher } from 'svelte';
-	import StartMenu from './StartMenu.svelte';
-	import type { TileData } from '$lib/types/TileData';
+  import { onMount, createEventDispatcher } from 'svelte';
+  import StartButton from './StartButton.svelte';
+  import StartMenu from './StartMenu.svelte';
+  import TaskbarButton from './TaskbarButton.svelte';
+  import type { TileData } from '$lib/types/TileData';
 
-	const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher();
 
-	export let tiles: TileData[] = [];
+  export let tiles: TileData[] = [];
 
-	let isStartMenuVisible: boolean = false;
+  let isStartMenuVisible: boolean = false;
 
-	function toggleStartMenu(): void {
-		isStartMenuVisible = !isStartMenuVisible;
-	}
+  function toggleStartMenu(): void {
+    isStartMenuVisible = !isStartMenuVisible;
+  }
 
-	function handleClickOutside(event: MouseEvent): void {
-		const startMenu = document.querySelector('.start-menu') as HTMLElement;
-		const startButton = document.querySelector('.start-button') as HTMLElement;
+  function handleClickOutside(event: MouseEvent): void {
+    const startMenu = document.querySelector('.start-menu') as HTMLElement;
+    const startButton = document.querySelector('.start-button') as HTMLElement;
 
-		if (startMenu && startButton && !startButton.contains(event.target as Node)) {
-			isStartMenuVisible = false;
-		}
-	}
+    if (startMenu && startButton && !startButton.contains(event.target as Node)) {
+      isStartMenuVisible = false;
+    }
+  }
 
-	function handleMenuItemClick(item: string) {
-		dispatch('menuItemClick', item);
-		isStartMenuVisible = false;
-	}
+  function handleMenuItemClick(item: string) {
+    dispatch('menuItemClick', item);
+    isStartMenuVisible = false;
+  }
 
-	function handleWindowClick(id: number, isMinimized: boolean) {
-		if (isMinimized) {
-			dispatch('restoreWindow', id);
-		} else {
-			dispatch('focusWindow', id);
-		}
-	}
+  function handleWindowClick(id: number, isMinimized: boolean) {
+    dispatch(isMinimized ? 'restoreWindow' : 'focusWindow', id);
+  }
 
-	onMount((): (() => void) => {
-		document.addEventListener('click', handleClickOutside);
-		return () => {
-			document.removeEventListener('click', handleClickOutside);
-		};
-	});
+  onMount(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  });
 </script>
 
 <div class="taskbar">
-	<button class="start-button" on:click={toggleStartMenu}>Start</button>
-	<div class="window-tabs">
-		{#each tiles as tile (tile.id)}
-			<div
-				class="window-tab"
-				class:focused={tile.isFocused}
-				class:minimized={tile.isMinimized}
-				on:click={() => handleWindowClick(tile.id, tile.isMinimized)}
-			>
-				{tile.title}
-			</div>
-		{/each}
-	</div>
+  <StartButton on:click={toggleStartMenu} />
+  <div class="window-tabs">
+    {#each tiles as tile (tile.id)}
+      <TaskbarButton
+        title={tile.title}
+        isFocused={tile.isFocused}
+        isMinimized={tile.isMinimized}
+        on:click={() => handleWindowClick(tile.id, tile.isMinimized)}
+      />
+    {/each}
+  </div>
 </div>
 
 <StartMenu
-	visible={isStartMenuVisible}
-	on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
+  visible={isStartMenuVisible}
+  on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
 />
 
 <style>
-	.window-tab.minimized {
-		background-color: #a0a0a0;
-	}
-	.taskbar {
-		position: absolute;
-		bottom: 0;
-		width: 100%;
-		height: 28px;
-		background-color: #d4d0c8;
-		display: flex;
-		align-items: center;
-		padding: 0 2px;
-		border-top: 2px solid #ffffff;
-		box-sizing: border-box;
-		z-index: 10000;
-	}
+  .taskbar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 28px;
+    background-color: #d4d0c8;
+    display: flex;
+    align-items: center;
+    padding: 0 2px;
+    border-top: 2px solid #ffffff;
+    box-sizing: border-box;
+    z-index: 10000;
+  }
 
-	.start-button {
-		background: linear-gradient(to bottom, #1fdf25, #0a9710);
-		border: 2px solid #ffffff;
-		border-right-color: #808080;
-		border-bottom-color: #808080;
-		color: white;
-		font-weight: bold;
-		font-size: 11px;
-		padding: 2px 5px;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		height: 22px;
-		margin-right: 4px;
-	}
+  .window-tabs {
+    display: flex;
+    flex-grow: 1;
+    overflow-x: auto;
+    height: 100%;
+  }
+</style>
+=======================
+File: lib/components/Taskbar/TaskbarButton.svelte
+=======================
 
-	.start-button:before {
-		content: '';
-		display: inline-block;
-		width: 16px;
-		height: 16px;
-		background-color: #008080;
-		margin-right: 4px;
-	}
+<script lang="ts">
+  export let title: string;
+  export let isFocused: boolean;
+  export let isMinimized: boolean;
+</script>
 
-	.start-button:active {
-		border: 2px solid #808080;
-		border-right-color: #ffffff;
-		border-bottom-color: #ffffff;
-	}
+<div
+  class="window-tab"
+  class:focused={isFocused}
+  class:minimized={isMinimized}
+  on:click
+>
+  {title}
+</div>
 
-	.window-tabs {
-		display: flex;
-		flex-grow: 1;
-		overflow-x: auto;
-		height: 100%;
-	}
+<style>
+  .window-tab {
+    background-color: #d4d0c8;
+    border: 1px solid #808080;
+    border-bottom: none;
+    padding: 2px 8px;
+    margin-right: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 11px;
+  }
 
-	.window-tab {
-		background-color: #d4d0c8;
-		border: 1px solid #808080;
-		border-bottom: none;
-		padding: 2px 8px;
-		margin-right: 2px;
-		cursor: pointer;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		max-width: 150px;
-		height: 22px;
-		display: flex;
-		align-items: center;
-		font-family: 'Tahoma', sans-serif;
-		font-size: 11px;
-	}
+  .window-tab.focused {
+    background-color: #ffffff;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #808080;
+  }
 
-	.window-tab.focused {
-		background-color: #ffffff;
-		border-top: 2px solid #ffffff;
-		border-left: 2px solid #ffffff;
-		border-right: 2px solid #808080;
-	}
+  .window-tab.minimized {
+    background-color: #a0a0a0;
+  }
 </style>
 =======================
 File: lib/components/Window/ResizeHandle.svelte
@@ -564,150 +606,229 @@ File: lib/components/Window/ResizeHandle.svelte
 =======================
 File: lib/components/Window/Tile.svelte
 =======================
+
 <script lang="ts">
-    import { onMount, createEventDispatcher } from 'svelte';
-    import ResizeHandle from './ResizeHandle.svelte';
-    import { Tile as TileClass } from '$lib/classes/Tile';
-    import type { TileData } from '$lib/types/TileData';
+  import { onMount, createEventDispatcher } from 'svelte';
+  import ResizeHandle from './ResizeHandle.svelte';
+  import Titlebar from './Titlebar.svelte';
+  import WindowContent from './WindowContent.svelte';
+  import { Tile as TileClass } from '$lib/classes/Tile';
+  import type { TileData } from '$lib/types/TileData';
 
-    export let desktop: HTMLDivElement;
-    export let id: number;
-    export let x: number;
-    export let y: number;
-    export let title: string;
-    export let isFocused: boolean;
-    export let isMinimized: boolean = false;
-    export let zIndex: number;
+  export let desktop: HTMLDivElement;
+  export let id: number;
+  export let x: number;
+  export let y: number;
+  export let title: string;
+  export let isFocused: boolean;
+  export let isMinimized: boolean = false;
+  export let zIndex: number;
 
-    const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher();
 
-    let tile: HTMLDivElement;
-    let tileInstance: TileClass;
+  let tile: HTMLDivElement;
+  let tileInstance: TileClass;
 
-    const directions = [
-        'top-left', 'top-right', 'bottom-left', 'bottom-right',
-        'top', 'bottom', 'left', 'right'
-    ];
+  const directions = [
+    'top-left', 'top-right', 'bottom-left', 'bottom-right',
+    'top', 'bottom', 'left', 'right'
+  ];
 
-    onMount(() => {
-        tileInstance = new TileClass(tile, desktop, () => {
-            dispatch('focus', id);
-        });
-        tile.style.left = `${x}px`;
-        tile.style.top = `${y}px`;
-    });
+  onMount(() => {
+    tileInstance = new TileClass(tile, desktop, () => dispatch('focus', id));
+    tile.style.left = `${x}px`;
+    tile.style.top = `${y}px`;
+  });
 
-    function handleMouseDown(event: MouseEvent) {
-        const titlebar = tile.querySelector('.titlebar');
-        if (titlebar && titlebar.contains(event.target as Node)) {
-            tileInstance.startDragging(event);
-        }
-        tileInstance.focus();
+  function handleMouseDown(event: MouseEvent) {
+    const titlebar = tile.querySelector('.titlebar');
+    if (titlebar && titlebar.contains(event.target as Node)) {
+      tileInstance.startDragging(event);
     }
+    tileInstance.focus();
+  }
 
-    function minimize() {
-        dispatch('minimize', id);
-    }
+  function handleTitlebarAction(event: CustomEvent) {
+    dispatch(event.type, id);
+  }
 
-    function close() {
-        dispatch('close', id);
-    }
-
-    $: tile && (tile.style.zIndex = zIndex.toString());
+  $: tile && (tile.style.zIndex = zIndex.toString());
 </script>
 
 <div class="tile" class:focused={isFocused} class:minimized={isMinimized} bind:this={tile} on:mousedown={handleMouseDown}>
-    <div class="titlebar" class:focused={isFocused}>
-        <div class="title">{title}</div>
-        <div class="buttons">
-            <button class="minimize" on:click={minimize}>_</button>
-            <button class="maximize">□</button>
-            <button class="close" on:click={close}>X</button>
-        </div>
-    </div>
-    <div class="body">Window Content for {title}</div>
-    {#each directions as direction}
-        <ResizeHandle {direction} />
-    {/each}
+  <Titlebar {title} {isFocused} 
+    on:minimize={handleTitlebarAction}
+    on:maximize={handleTitlebarAction}
+    on:close={handleTitlebarAction}
+  />
+  <WindowContent {title} />
+  {#each directions as direction}
+    <ResizeHandle {direction} />
+  {/each}
 </div>
 
 <style>
-	.tile {
-		width: 300px;
-		height: 200px;
-		background-color: #D4D0C8;
-		position: absolute;
-		top: 0;
-		left: 0;
-		display: flex;
-		flex-direction: column;
-		min-width: 100px;
-		min-height: 100px;
-		max-width: 500px;
-		max-height: 500px;
-		user-select: none;
-		border: 2px solid #ffffff;
-		border-right-color: #808080;
-		border-bottom-color: #808080;
-		box-shadow: 1px 1px 0 #000000;
-	}
+  .tile {
+    width: 300px;
+    height: 200px;
+    background-color: #D4D0C8;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 100px;
+    min-height: 100px;
+    max-width: 500px;
+    max-height: 500px;
+    user-select: none;
+    border: 2px solid #ffffff;
+    border-right-color: #808080;
+    border-bottom-color: #808080;
+    box-shadow: 1px 1px 0 #000000;
+  }
 
-    .tile.minimized {
-		display: none;
-	}
+  .tile.minimized {
+    display: none;
+  }
 
-	.titlebar {
-		height: 18px;
-		background: linear-gradient(to right, #7b7b7b, #a8a8a8);
-		color: #d8d8d8;
-		font-weight: bold;
-		font-size: 12px;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 2px 3px;
-		cursor: move;
-	}
-
-	.titlebar.focused {
-		background: linear-gradient(to right, #000080, #1084d0);
-		color: white;
-	}
-
-	.buttons {
-		display: flex;
-	}
-
-	.buttons button {
-		width: 16px;
-		height: 14px;
-		margin-left: 2px;
-		border: 1px solid #ffffff;
-		background-color: #D4D0C8;
-		color: #000000;
-		font-size: 9px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-	}
-
-	.body {
-		width: 100%;
-		height: calc(100% - 22px);
-		background-color: #ffffff;
-		flex: 1;
-		border: 1px solid #808080;
-		border-top-color: #ffffff;
-		padding: 2px;
-		font-family: 'Tahoma', sans-serif;
-		font-size: 11px;
-	}
-
-	.focused {
-		z-index: 100;
-	}
+  .tile.focused {
+    z-index: 100;
+  }
 </style>
+=======================
+File: lib/components/Window/Titlebar.svelte
+=======================
+
+
+<script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+  import WindowButtons from './WindowButtons.svelte';
+
+  export let title: string;
+  export let isFocused: boolean;
+
+  const dispatch = createEventDispatcher();
+
+  function handleButtonAction(event: CustomEvent) {
+    dispatch(event.type, event.detail);
+  }
+</script>
+
+<div class="titlebar" class:focused={isFocused}>
+  <div class="title">{title}</div>
+  <WindowButtons 
+    on:minimize={handleButtonAction}
+    on:maximize={handleButtonAction}
+    on:close={handleButtonAction}
+  />
+</div>
+
+<style>
+  .titlebar {
+    height: 18px;
+    background: linear-gradient(to right, #7b7b7b, #a8a8a8);
+    color: #d8d8d8;
+    font-weight: bold;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 3px;
+    cursor: move;
+  }
+
+  .titlebar.focused {
+    background: linear-gradient(to right, #000080, #1084d0);
+    color: white;
+  }
+</style>
+=======================
+File: lib/components/Window/WindowButtons.svelte
+=======================
+
+
+<script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
+
+  function handleMinimize() {
+    dispatch('minimize');
+  }
+
+  function handleMaximize() {
+    dispatch('maximize');
+  }
+
+  function handleClose() {
+    dispatch('close');
+  }
+</script>
+
+<div class="buttons">
+  <button class="minimize" on:click={handleMinimize}>_</button>
+  <button class="maximize" on:click={handleMaximize}>□</button>
+  <button class="close" on:click={handleClose}>X</button>
+</div>
+
+<style>
+  .buttons {
+    display: flex;
+  }
+
+  .buttons button {
+    width: 16px;
+    height: 14px;
+    margin-left: 2px;
+    border: 1px solid #ffffff;
+    background-color: #D4D0C8;
+    color: #000000;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+</style>
+=======================
+File: lib/components/Window/WindowContent.svelte
+=======================
+
+
+<script lang="ts">
+  export let title: string;
+</script>
+
+<div class="body">
+  Window Content for {title}
+</div>
+
+<style>
+  .body {
+    width: 100%;
+    height: calc(100% - 22px);
+    background-color: #ffffff;
+    flex: 1;
+    border: 1px solid #808080;
+    border-top-color: #ffffff;
+    padding: 2px;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 11px;
+  }
+</style>
+=======================
+File: lib/styles/desktop.css
+=======================
+/* File: lib/styles/desktop.css */
+
+.desktop {
+    width: 100%;
+    height: 100vh;
+    background-color: #008080;
+    position: relative;
+    overflow: hidden;
+  }
 =======================
 File: lib/types/TileData.ts
 =======================
@@ -721,9 +842,11 @@ export interface TileData {
     zIndex: number;
 }
 =======================
-File: lib/utils/tileUtils.ts
+File: lib/utils/addTile.ts
 =======================
-import type { TileData } from '$lib/types/TileData';
+// File: lib/utils/addTile.ts
+
+import type { TileData } from '../types/TileData';
 
 export function addTile(tiles: TileData[], nextTileId: number, desktop: HTMLDivElement, title: string): TileData[] {
     const desktopRect = desktop.getBoundingClientRect();
@@ -748,6 +871,10 @@ export function addTile(tiles: TileData[], nextTileId: number, desktop: HTMLDivE
     };
     return [...tiles.map(tile => ({ ...tile, isFocused: false })), newTile];
 }
+=======================
+File: lib/utils/focusTile.ts
+=======================
+import type { TileData } from '../types/TileData';
 
 export function focusTile(tiles: TileData[], id: number): TileData[] {
     const maxZIndex = Math.max(...tiles.map(tile => tile.zIndex));
@@ -757,22 +884,12 @@ export function focusTile(tiles: TileData[], id: number): TileData[] {
         zIndex: tile.id === id ? maxZIndex + 1 : tile.zIndex
     }));
 }
+=======================
+File: lib/utils/focusTopmostTile.ts
+=======================
+// File: lib/utils/focusTopmostTile.ts
 
-export function minimizeTile(tiles: TileData[], id: number): TileData[] {
-    const updatedTiles = tiles.map(tile => 
-        tile.id === id ? { ...tile, isMinimized: true, isFocused: false } : tile
-    );
-    return focusTopmostTile(updatedTiles);
-}
-
-export function restoreTile(tiles: TileData[], id: number): TileData[] {
-    const maxZIndex = Math.max(...tiles.map(tile => tile.zIndex));
-    return tiles.map(tile => 
-        tile.id === id 
-            ? { ...tile, isMinimized: false, isFocused: true, zIndex: maxZIndex + 1 } 
-            : { ...tile, isFocused: false }
-    );
-}
+import type { TileData } from '../types/TileData';
 
 export function focusTopmostTile(tiles: TileData[]): TileData[] {
     const visibleTiles = tiles.filter(tile => !tile.isMinimized);
@@ -786,6 +903,35 @@ export function focusTopmostTile(tiles: TileData[]): TileData[] {
         isFocused: tile.id === topmostTileId,
         zIndex: tile.id === topmostTileId ? maxZIndex + 1 : tile.zIndex
     }));
+}
+=======================
+File: lib/utils/minimizeTile.ts
+=======================
+// File: lib/utils/minimizeTile.ts
+
+import type { TileData } from '../types/TileData';
+import { focusTopmostTile } from './focusTopmostTile';
+
+export function minimizeTile(tiles: TileData[], id: number): TileData[] {
+    const updatedTiles = tiles.map(tile => 
+        tile.id === id ? { ...tile, isMinimized: true, isFocused: false } : tile
+    );
+    return focusTopmostTile(updatedTiles);
+}
+=======================
+File: lib/utils/restoreTile.ts
+=======================
+// File: lib/utils/restoreTile.ts
+
+import type { TileData } from '../types/TileData';
+
+export function restoreTile(tiles: TileData[], id: number): TileData[] {
+    const maxZIndex = Math.max(...tiles.map(tile => tile.zIndex));
+    return tiles.map(tile => 
+        tile.id === id 
+            ? { ...tile, isMinimized: false, isFocused: true, zIndex: maxZIndex + 1 } 
+            : { ...tile, isFocused: false }
+    );
 }
 =======================
 File: output.txt
@@ -845,70 +991,66 @@ File: routes/+layout.svelte
 =======================
 File: routes/+page.svelte
 =======================
+
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
-    import Tile from '$lib/components/Window/Tile.svelte';
-    import type { TileData } from '$lib/types/TileData';
-    import { addTile, focusTile, minimizeTile, restoreTile, focusTopmostTile } from '$lib/utils/tileUtils';
+  import { onMount } from 'svelte';
+  import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
+  import Tile from '$lib/components/Window/Tile.svelte';
+  import type { TileData } from '$lib/types/TileData';
+  import { addTile } from '$lib/utils/addTile';
+  import { focusTile } from '$lib/utils/focusTile';
+  import { minimizeTile } from '$lib/utils/minimizeTile';
+  import { restoreTile } from '$lib/utils/restoreTile';
+  import { focusTopmostTile } from '$lib/utils/focusTopmostTile';
+  import '$lib/styles/desktop.css';
 
-    let desktop: HTMLDivElement;
-    let tiles: TileData[] = [];
-    let nextTileId = 0;
+  let desktop: HTMLDivElement;
+  let tiles: TileData[] = [];
+  let nextTileId = 0;
 
-    onMount(() => {
-        // No initial tiles
-    });
+  onMount(() => {
+    // No initial tiles
+  });
 
-    function handleStartMenuItemClick(item: string) {
-        tiles = addTile(tiles, nextTileId++, desktop, item);
-    }
+  function handleStartMenuItemClick(item: string) {
+    tiles = addTile(tiles, nextTileId++, desktop, item);
+  }
 
-    function handleFocusTile(id: number) {
-        tiles = focusTile(tiles, id);
-    }
+  function handleFocusTile(id: number) {
+    tiles = focusTile(tiles, id);
+  }
 
-    function handleMinimizeTile(id: number) {
-        tiles = minimizeTile(tiles, id);
-    }
+  function handleMinimizeTile(id: number) {
+    tiles = minimizeTile(tiles, id);
+  }
 
-    function handleRestoreTile(id: number) {
-        tiles = restoreTile(tiles, id);
-    }
+  function handleRestoreTile(id: number) {
+    tiles = restoreTile(tiles, id);
+  }
 
-    function handleCloseTile(id: number) {
-        tiles = tiles.filter(tile => tile.id !== id);
-        tiles = focusTopmostTile(tiles);
-    }
+  function handleCloseTile(id: number) {
+    tiles = tiles.filter(tile => tile.id !== id);
+    tiles = focusTopmostTile(tiles);
+  }
 </script>
 
 <div class="desktop" bind:this={desktop}>
-    {#each tiles as tile (tile.id)}
-        <Tile 
-            {...tile}
-            {desktop}
-            on:focus={() => handleFocusTile(tile.id)}
-            on:minimize={() => handleMinimizeTile(tile.id)}
-            on:close={() => handleCloseTile(tile.id)}
-        />
-    {/each}
-    <Taskbar 
-        on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
-        on:focusWindow={({ detail }) => handleFocusTile(detail)}
-        on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
-        {tiles}
+  {#each tiles as tile (tile.id)}
+    <Tile 
+      {...tile}
+      {desktop}
+      on:focus={() => handleFocusTile(tile.id)}
+      on:minimize={() => handleMinimizeTile(tile.id)}
+      on:close={() => handleCloseTile(tile.id)}
     />
+  {/each}
+  <Taskbar 
+    on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
+    on:focusWindow={({ detail }) => handleFocusTile(detail)}
+    on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
+    {tiles}
+  />
 </div>
-
-<style>
-    .desktop {
-        width: 100%;
-        height: 100vh;
-        background-color: #008080;
-        position: relative;
-        overflow: hidden;
-    }
-</style>
 =======================
 File: routes/+page.ts
 =======================
@@ -972,8 +1114,4 @@ echo "" > "$output_file"
 print_tree "." "" true
 
 echo "Directory structure has been written to $output_file"
-
-=======================
-File: Tile.ts
-=======================
 
