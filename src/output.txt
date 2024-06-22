@@ -56,8 +56,15 @@ File: directory_structure.txt
 lib
 applications
 ├── Calculator.svelte
+├── FileExplorer.svelte
+├── InternetExplorer.svelte
+├── Minesweeper.svelte
 ├── Notepad.svelte
-└── Settings.svelte
+├── Paint.svelte
+├── PlaceholderApp.svelte
+├── Settings.svelte
+├── Solitaire.svelte
+└── WordPad.svelte
 classes
 ├── Tile.ts
 └── TileManager.ts
@@ -192,6 +199,146 @@ File: lib/applications/Calculator.svelte
     }
   </style>
 =======================
+File: lib/applications/FileExplorer.svelte
+=======================
+<script lang="ts">
+    import PlaceholderApp from './PlaceholderApp.svelte';
+  </script>
+  
+  <PlaceholderApp title="File Explorer" />
+=======================
+File: lib/applications/InternetExplorer.svelte
+=======================
+<script lang="ts">
+    import PlaceholderApp from './PlaceholderApp.svelte';
+  </script>
+  
+  <PlaceholderApp title="Internet Explorer" />
+=======================
+File: lib/applications/Minesweeper.svelte
+=======================
+<script lang="ts">
+    let grid: number[][] = [];
+    let revealed: boolean[][] = [];
+    const size = 9;
+    const mines = 10;
+  
+    function initializeGrid() {
+      grid = Array(size).fill(null).map(() => Array(size).fill(0));
+      revealed = Array(size).fill(null).map(() => Array(size).fill(false));
+      
+      // Place mines
+      let minesPlaced = 0;
+      while (minesPlaced < mines) {
+        const x = Math.floor(Math.random() * size);
+        const y = Math.floor(Math.random() * size);
+        if (grid[y][x] !== -1) {
+          grid[y][x] = -1;
+          minesPlaced++;
+        }
+      }
+  
+      // Calculate numbers
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          if (grid[y][x] === -1) continue;
+          grid[y][x] = countAdjacentMines(x, y);
+        }
+      }
+    }
+  
+    function countAdjacentMines(x: number, y: number): number {
+      let count = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const ny = y + dy;
+          const nx = x + dx;
+          if (ny >= 0 && ny < size && nx >= 0 && nx < size && grid[ny][nx] === -1) {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+  
+    function handleClick(x: number, y: number) {
+      if (revealed[y][x]) return;
+      revealed[y][x] = true;
+      if (grid[y][x] === 0) {
+        revealAdjacent(x, y);
+      }
+    }
+  
+    function revealAdjacent(x: number, y: number) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const ny = y + dy;
+          const nx = x + dx;
+          if (ny >= 0 && ny < size && nx >= 0 && nx < size && !revealed[ny][nx]) {
+            revealed[ny][nx] = true;
+            if (grid[ny][nx] === 0) {
+              revealAdjacent(nx, ny);
+            }
+          }
+        }
+      }
+    }
+  
+    initializeGrid();
+  </script>
+  
+  <div class="minesweeper">
+    <div class="grid">
+      {#each grid as row, y}
+        <div class="row">
+          {#each row as cell, x}
+            <button class="cell" on:click={() => handleClick(x, y)} disabled={revealed[y][x]}>
+              {#if revealed[y][x]}
+                {cell === -1 ? '💣' : cell || ''}
+              {/if}
+            </button>
+          {/each}
+        </div>
+      {/each}
+    </div>
+  </div>
+  
+  <style>
+    .minesweeper {
+      font-family: 'Tahoma', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
+    .grid {
+      display: inline-block;
+      background-color: #c0c0c0;
+      border: 2px solid #808080;
+      border-top-color: #ffffff;
+      border-left-color: #ffffff;
+    }
+    .row {
+      display: flex;
+    }
+    .cell {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #808080;
+      background-color: #c0c0c0;
+      font-weight: bold;
+      font-size: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    .cell:disabled {
+      background-color: #d3d3d3;
+      border: 1px solid #a9a9a9;
+    }
+  </style>
+=======================
 File: lib/applications/Notepad.svelte
 =======================
 <script lang="ts">
@@ -221,6 +368,42 @@ File: lib/applications/Notepad.svelte
       box-sizing: border-box;
     }
   </style>
+=======================
+File: lib/applications/Paint.svelte
+=======================
+<script lang="ts">
+    import PlaceholderApp from './PlaceholderApp.svelte';
+  </script>
+  
+  <PlaceholderApp title="Paint" />
+  
+=======================
+File: lib/applications/PlaceholderApp.svelte
+=======================
+<script lang="ts">
+    export let title: string;
+  </script>
+  
+  <div class="placeholder-app">
+    <h2>{title}</h2>
+    <p>This application is not yet implemented.</p>
+  </div>
+  
+  <style>
+    .placeholder-app {
+      padding: 20px;
+      text-align: center;
+      font-family: 'Tahoma', sans-serif;
+    }
+    h2 {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 12px;
+    }
+  </style>
+  
 =======================
 File: lib/applications/Settings.svelte
 =======================
@@ -302,6 +485,69 @@ File: lib/applications/Settings.svelte
       border: 2px solid #808080;
       border-bottom-color: #ffffff;
       border-right-color: #ffffff;
+    }
+  </style>
+=======================
+File: lib/applications/Solitaire.svelte
+=======================
+<script lang="ts">
+    import PlaceholderApp from './PlaceholderApp.svelte';
+  </script>
+  
+  <PlaceholderApp title="Solitaire" />
+=======================
+File: lib/applications/WordPad.svelte
+=======================
+<script lang="ts">
+    let text = '';
+  </script>
+  
+  <div class="wordpad">
+    <div class="toolbar">
+      <button>Bold</button>
+      <button>Italic</button>
+      <button>Underline</button>
+      <select>
+        <option>Arial</option>
+        <option>Times New Roman</option>
+        <option>Courier New</option>
+      </select>
+      <select>
+        <option>8</option>
+        <option>10</option>
+        <option>12</option>
+        <option>14</option>
+        <option>16</option>
+      </select>
+    </div>
+    <textarea bind:value={text} placeholder="Type your text here..."></textarea>
+  </div>
+  
+  <style>
+    .wordpad {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      font-family: 'Tahoma', sans-serif;
+    }
+    .toolbar {
+      display: flex;
+      gap: 5px;
+      padding: 5px;
+      background-color: #d4d0c8;
+      border-bottom: 1px solid #808080;
+    }
+    button, select {
+      font-size: 11px;
+      padding: 2px 5px;
+    }
+    textarea {
+      flex-grow: 1;
+      resize: none;
+      border: none;
+      padding: 5px;
+      font-family: 'Arial', sans-serif;
+      font-size: 12px;
     }
   </style>
 =======================
@@ -1052,6 +1298,12 @@ File: lib/components/Window/WindowContent.svelte
   import Calculator from '../../applications/Calculator.svelte';
   import Notepad from '../../applications/Notepad.svelte';
   import Settings from '../../applications/Settings.svelte';
+  import Paint from '../../applications/Paint.svelte';
+  import FileExplorer from '../../applications/FileExplorer.svelte';
+  import InternetExplorer from '../../applications/InternetExplorer.svelte';
+  import Minesweeper from '../../applications/Minesweeper.svelte';
+  import Solitaire from '../../applications/Solitaire.svelte';
+  import WordPad from '../../applications/WordPad.svelte';
 
   export let title: string;
 </script>
@@ -1063,6 +1315,18 @@ File: lib/components/Window/WindowContent.svelte
     <Notepad />
   {:else if title === 'Settings'}
     <Settings />
+  {:else if title === 'Paint'}
+    <Paint />
+  {:else if title === 'File Explorer'}
+    <FileExplorer />
+  {:else if title === 'Internet Explorer'}
+    <InternetExplorer />
+  {:else if title === 'Minesweeper'}
+    <Minesweeper />
+  {:else if title === 'Solitaire'}
+    <Solitaire />
+  {:else if title === 'WordPad'}
+    <WordPad />
   {:else}
     <p>Window Content for {title}</p>
   {/if}
@@ -1385,7 +1649,17 @@ File: routes/+page.svelte
 <script lang="ts">
   import Desktop from '$lib/components/Desktop/Desktop.svelte';
 
-  const startMenuItems = ['Calculator', 'Notepad', 'Settings'];
+  const startMenuItems = [
+    'Calculator',
+    'Notepad',
+    'Settings',
+    'Paint',
+    'File Explorer',
+    'Internet Explorer',
+    'Minesweeper',
+    'Solitaire',
+    'WordPad'
+  ];
 </script>
 
 <Desktop {startMenuItems} />

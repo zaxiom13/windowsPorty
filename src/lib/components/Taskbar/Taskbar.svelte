@@ -4,10 +4,11 @@
   import StartMenu from './StartMenu.svelte';
   import TaskbarButton from './TaskbarButton.svelte';
   import { tilesStore } from '$lib/stores/tilesStore';
+  import type { StartMenuStructure } from '$lib/types/StartMenuItem';
 
   const dispatch = createEventDispatcher();
 
-  export let startMenuItems: string[] = [];
+  export let startMenuStructure: StartMenuStructure;
 
   let isStartMenuVisible: boolean = false;
 
@@ -24,8 +25,8 @@
     }
   }
 
-  function handleMenuItemClick(item: string) {
-    dispatch('menuItemClick', item);
+  function handleMenuItemClick(event: CustomEvent<string>) {
+    dispatch('menuItemClick', event.detail);
     isStartMenuVisible = false;
   }
 
@@ -60,9 +61,9 @@
 </div>
 
 <StartMenu
+  menuStructure={startMenuStructure}
   visible={isStartMenuVisible}
-  items={startMenuItems}
-  on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
+  on:menuItemClick={handleMenuItemClick}
 />
 
 <style>

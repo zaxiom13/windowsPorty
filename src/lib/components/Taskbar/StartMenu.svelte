@@ -1,25 +1,24 @@
+<!-- File: lib/components/Taskbar/StartMenu.svelte -->
 <script lang="ts">
+  import type { StartMenuStructure } from '$lib/types/StartMenuItem';
   import { createEventDispatcher } from 'svelte';
+  import MenuItemComponent from './MenuItemComponent.svelte';
 
+  export let menuStructure: StartMenuStructure;
   export let visible: boolean = false;
   
   const dispatch = createEventDispatcher();
 
-  export let items = [
-    "Programs",
-    "Documents",
-    "Settings",
-    "Find",
-    "Help",
-    "Run...",
-    "Log Off...",
-    "Shut Down..."
-  ];
-
-  function handleItemClick(item: string) {
-    dispatch('menuItemClick', item);
+  function handleMenuItemClick(event: CustomEvent<string>) {
+    dispatch('menuItemClick', event.detail);
   }
 </script>
+
+<div class="start-menu" class:visible>
+  {#each menuStructure.items as item}
+    <MenuItemComponent {item} on:menuItemClick={handleMenuItemClick} />
+  {/each}
+</div>
 
 <style>
   .start-menu {
@@ -38,22 +37,4 @@
   .start-menu.visible {
     display: block;
   }
-
-  .menu-item {
-    padding: 4px 8px;
-    cursor: pointer;
-    font-family: 'Tahoma', sans-serif;
-    font-size: 11px;
-  }
-
-  .menu-item:hover {
-    background-color: #000080;
-    color: white;
-  }
 </style>
-
-<div class="start-menu {visible ? 'visible' : ''}">
-  {#each items as item}
-    <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
-  {/each}
-</div>

@@ -5,13 +5,14 @@
     import { tilesStore } from '$lib/stores/tilesStore';
     import { backgroundColor } from '$lib/stores/backgroundColorStore';
     import '$lib/styles/desktop.css';
+    import type { StartMenuStructure } from '$lib/types/StartMenuItem';
   
-    export let startMenuItems: string[] = [];
+    export let startMenuStructure: StartMenuStructure;
   
     let desktop: HTMLDivElement;
   
-    function handleStartMenuItemClick(item: string) {
-      tilesStore.add(desktop, item);
+    function handleStartMenuItemClick(component: string) {
+      tilesStore.add(desktop, component);
     }
   
     onMount(() => {
@@ -30,8 +31,8 @@
       />
     {/each}
     <Taskbar 
+      {startMenuStructure}
       on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
-      {startMenuItems}
     />
   </div>
   
