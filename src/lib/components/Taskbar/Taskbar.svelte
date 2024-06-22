@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import StartButton from './StartButton.svelte';
   import StartMenu from './StartMenu.svelte';
   import TaskbarButton from './TaskbarButton.svelte';
-  import type { TileData } from '$lib/types/TileData';
+  import { tilesStore } from '$lib/stores/tilesStore';
 
   const dispatch = createEventDispatcher();
 
-  export let tiles: TileData[] = [];
   export let startMenuItems: string[] = [];
 
   let isStartMenuVisible: boolean = false;
@@ -31,19 +30,25 @@
   }
 
   function handleWindowClick(id: number, isMinimized: boolean) {
-    dispatch(isMinimized ? 'restoreWindow' : 'focusWindow', id);
+    if (isMinimized) {
+      tilesStore.restore(id);
+    } else {
+      tilesStore.focus(id);
+    }
   }
 
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 </script>
 
 <div class="taskbar">
   <StartButton on:click={toggleStartMenu} />
   <div class="window-tabs">
-    {#each tiles as tile (tile.id)}
+    {#each $tilesStore as tile (tile.id)}
       <TaskbarButton
         title={tile.title}
         isFocused={tile.isFocused}

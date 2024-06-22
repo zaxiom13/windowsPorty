@@ -64,7 +64,11 @@ Taskbar
 ├── Taskbar.svelte
 └── TaskbarButton.svelte
 Window
+├── backgroundColorStore.ts
+├── Calculator.svelte
+├── Notepad.svelte
 ├── ResizeHandle.svelte
+├── Settings.svelte
 ├── Tile.svelte
 ├── Titlebar.svelte
 ├── WindowButtons.svelte
@@ -326,10 +330,10 @@ File: lib/components/Taskbar/StartMenu.svelte
   import { createEventDispatcher } from 'svelte';
 
   export let visible: boolean = false;
-
+  
   const dispatch = createEventDispatcher();
 
-  const menuItems = [
+  export let items = [
     "Programs",
     "Documents",
     "Settings",
@@ -377,7 +381,7 @@ File: lib/components/Taskbar/StartMenu.svelte
 </style>
 
 <div class="start-menu {visible ? 'visible' : ''}">
-  {#each menuItems as item}
+  {#each items as item}
     <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
   {/each}
 </div>
@@ -394,6 +398,7 @@ File: lib/components/Taskbar/Taskbar.svelte
   const dispatch = createEventDispatcher();
 
   export let tiles: TileData[] = [];
+  export let startMenuItems: string[] = [];
 
   let isStartMenuVisible: boolean = false;
 
@@ -441,6 +446,7 @@ File: lib/components/Taskbar/Taskbar.svelte
 
 <StartMenu
   visible={isStartMenuVisible}
+  items={startMenuItems}
   on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
 />
 
@@ -515,6 +521,135 @@ File: lib/components/Taskbar/TaskbarButton.svelte
     background-color: #a0a0a0;
   }
 </style>
+=======================
+File: lib/components/Window/backgroundColorStore.ts
+=======================
+import { writable } from 'svelte/store';
+
+export const backgroundColor = writable('#008080');
+=======================
+File: lib/components/Window/Calculator.svelte
+=======================
+<script lang="ts">
+    let display = '0';
+    let currentOperation = '';
+    let previousValue = 0;
+  
+    function handleButtonClick(value: string) {
+      if (value === 'C') {
+        display = '0';
+        currentOperation = '';
+        previousValue = 0;
+      } else if (value === '=') {
+        calculate();
+      } else if (['+', '-', '*', '/'].includes(value)) {
+        currentOperation = value;
+        previousValue = parseFloat(display);
+        display = '0';
+      } else {
+        display = display === '0' ? value : display + value;
+      }
+    }
+  
+    function calculate() {
+      const currentValue = parseFloat(display);
+      let result = 0;
+      switch (currentOperation) {
+        case '+':
+          result = previousValue + currentValue;
+          break;
+        case '-':
+          result = previousValue - currentValue;
+          break;
+        case '*':
+          result = previousValue * currentValue;
+          break;
+        case '/':
+          result = previousValue / currentValue;
+          break;
+      }
+      display = result.toString();
+      currentOperation = '';
+    }
+  </script>
+  
+  <div class="calculator">
+    <div class="display">{display}</div>
+    <div class="buttons">
+      {#each ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', 'C', '=', '+'] as button}
+        <button on:click={() => handleButtonClick(button)}>{button}</button>
+      {/each}
+    </div>
+  </div>
+  
+  <style>
+    .calculator {
+      width: 200px;
+      margin: 10px auto;
+      background-color: #d4d0c8;
+      border: 2px solid #808080;
+      border-top-color: #ffffff;
+      border-left-color: #ffffff;
+    }
+    .display {
+      background-color: #ffffff;
+      border: 1px solid #808080;
+      margin: 5px;
+      padding: 5px;
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      padding: 5px;
+    }
+    button {
+      background-color: #d4d0c8;
+      border: 2px solid #808080;
+      border-top-color: #ffffff;
+      border-left-color: #ffffff;
+      padding: 5px;
+      font-family: 'Tahoma', sans-serif;
+      font-size: 12px;
+    }
+    button:active {
+      border: 2px solid #808080;
+      border-bottom-color: #ffffff;
+      border-right-color: #ffffff;
+    }
+  </style>
+=======================
+File: lib/components/Window/Notepad.svelte
+=======================
+<script lang="ts">
+    let text = '';
+  </script>
+  
+  <div class="notepad">
+    <textarea bind:value={text} placeholder="Type your text here..."></textarea>
+  </div>
+  
+  <style>
+    .notepad {
+      width: 100%;
+      height: 100%;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    textarea {
+      width: 100%;
+      height: 100%;
+      resize: none;
+      border: 1px solid #808080;
+      background-color: #ffffff;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+  </style>
 =======================
 File: lib/components/Window/ResizeHandle.svelte
 =======================
@@ -603,6 +738,89 @@ File: lib/components/Window/ResizeHandle.svelte
   on:mousedown
 ></div>
 
+=======================
+File: lib/components/Window/Settings.svelte
+=======================
+<script lang="ts">
+    import { backgroundColor } from './backgroundColorStore';
+    
+    let soundEnabled = true;
+    let screenSaverTimeout = 15;
+  
+    function handleApply() {
+      // In a real application, you might want to save these settings to some persistent storage
+      console.log('Settings applied');
+    }
+  </script>
+  
+  <div class="settings">
+    <h2>Display Settings</h2>
+    <div class="setting">
+      <label for="background-color">Background Color:</label>
+      <input type="color" id="background-color" bind:value={$backgroundColor}>
+    </div>
+  
+    <h2>Sound Settings</h2>
+    <div class="setting">
+      <label>
+        <input type="checkbox" bind:checked={soundEnabled}>
+        Enable System Sounds
+      </label>
+    </div>
+  
+    <h2>Screen Saver</h2>
+    <div class="setting">
+      <label for="screensaver-timeout">Wait</label>
+      <input type="number" id="screensaver-timeout" bind:value={screenSaverTimeout} min="1" max="60">
+      <span>minutes</span>
+    </div>
+  
+    <button class="apply-button" on:click={handleApply}>Apply</button>
+  </div>
+  
+  <style>
+    .settings {
+      padding: 10px;
+      font-family: 'Tahoma', sans-serif;
+      font-size: 11px;
+    }
+    h2 {
+      font-size: 14px;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #808080;
+    }
+    .setting {
+      margin-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 150px;
+    }
+    input[type="color"] {
+      width: 50px;
+      height: 20px;
+      border: 1px solid #808080;
+    }
+    input[type="number"] {
+      width: 40px;
+    }
+    .apply-button {
+      background-color: #d4d0c8;
+      border: 2px solid #808080;
+      border-top-color: #ffffff;
+      border-left-color: #ffffff;
+      padding: 5px 10px;
+      font-family: 'Tahoma', sans-serif;
+      font-size: 11px;
+      margin-top: 10px;
+    }
+    .apply-button:active {
+      border: 2px solid #808080;
+      border-bottom-color: #ffffff;
+      border-right-color: #ffffff;
+    }
+  </style>
 =======================
 File: lib/components/Window/Tile.svelte
 =======================
@@ -794,14 +1012,24 @@ File: lib/components/Window/WindowButtons.svelte
 =======================
 File: lib/components/Window/WindowContent.svelte
 =======================
-
-
 <script lang="ts">
+  import Calculator from './Calculator.svelte';
+  import Notepad from './Notepad.svelte';
+  import Settings from './Settings.svelte';
+
   export let title: string;
 </script>
 
 <div class="body">
-  Window Content for {title}
+  {#if title === 'Calculator'}
+    <Calculator />
+  {:else if title === 'Notepad'}
+    <Notepad />
+  {:else if title === 'Settings'}
+    <Settings />
+  {:else}
+    <p>Window Content for {title}</p>
+  {/if}
 </div>
 
 <style>
@@ -815,20 +1043,18 @@ File: lib/components/Window/WindowContent.svelte
     padding: 2px;
     font-family: 'Tahoma', sans-serif;
     font-size: 11px;
+    overflow: auto;
   }
 </style>
 =======================
 File: lib/styles/desktop.css
 =======================
-/* File: lib/styles/desktop.css */
-
 .desktop {
-    width: 100%;
-    height: 100vh;
-    background-color: #008080;
-    position: relative;
-    overflow: hidden;
-  }
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
 =======================
 File: lib/types/TileData.ts
 =======================
@@ -991,7 +1217,6 @@ File: routes/+layout.svelte
 =======================
 File: routes/+page.svelte
 =======================
-
 <script lang="ts">
   import { onMount } from 'svelte';
   import Taskbar from '$lib/components/Taskbar/Taskbar.svelte';
@@ -1002,6 +1227,7 @@ File: routes/+page.svelte
   import { minimizeTile } from '$lib/utils/minimizeTile';
   import { restoreTile } from '$lib/utils/restoreTile';
   import { focusTopmostTile } from '$lib/utils/focusTopmostTile';
+  import { backgroundColor } from '$lib/components/Window/backgroundColorStore';
   import '$lib/styles/desktop.css';
 
   let desktop: HTMLDivElement;
@@ -1032,9 +1258,11 @@ File: routes/+page.svelte
     tiles = tiles.filter(tile => tile.id !== id);
     tiles = focusTopmostTile(tiles);
   }
+
+  const startMenuItems = ['Calculator', 'Notepad', 'Settings'];
 </script>
 
-<div class="desktop" bind:this={desktop}>
+<div class="desktop" bind:this={desktop} style:background-color={$backgroundColor}>
   {#each tiles as tile (tile.id)}
     <Tile 
       {...tile}
@@ -1049,6 +1277,7 @@ File: routes/+page.svelte
     on:focusWindow={({ detail }) => handleFocusTile(detail)}
     on:restoreWindow={({ detail }) => handleRestoreTile(detail)}
     {tiles}
+    {startMenuItems}
   />
 </div>
 =======================

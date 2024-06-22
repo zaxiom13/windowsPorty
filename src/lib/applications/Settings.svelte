@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { backgroundColor } from './backgroundColorStore';
+    import { backgroundColor } from '../stores/backgroundColorStore';
     
     let soundEnabled = true;
     let screenSaverTimeout = 15;

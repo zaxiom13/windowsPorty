@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Calculator from './Calculator.svelte';
-  import Notepad from './Notepad.svelte';
-  import Settings from './Settings.svelte';
+  import Calculator from '../../applications/Calculator.svelte';
+  import Notepad from '../../applications/Notepad.svelte';
+  import Settings from '../../applications/Settings.svelte';
 
   export let title: string;
 </script>
