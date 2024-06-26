@@ -8,6 +8,7 @@
   import Minesweeper from '../../applications/Minesweeper.svelte';
   import Solitaire from '../../applications/Solitaire.svelte';
   import WordPad from '../../applications/WordPad.svelte';
+  import WindowsMaker from '../../applications/WindowsMaker.svelte'; // Add this line
 
   export let title: string;
 </script>
@@ -31,6 +32,8 @@
     <Solitaire />
   {:else if title === 'WordPad'}
     <WordPad />
+  {:else if title === 'WindowsMaker'}
+    <WindowsMaker />
   {:else}
     <p>Window Content for {title}</p>
   {/if}

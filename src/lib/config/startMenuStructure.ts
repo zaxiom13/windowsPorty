@@ -14,7 +14,8 @@ const startMenuStructure: StartMenuStructure = {
             { name: "Calculator", component: "Calculator", items: [] },
             { name: "Notepad", component: "Notepad", items: [] },
             { name: "Paint", component: "Paint", items: [] },
-            { name: "WordPad", component: "WordPad", items: [] }
+            { name: "WordPad", component: "WordPad", items: [] },
+            { name: "Windows Maker", component: "WindowsMaker", items: [] } // Add this line
           ]
         },
         { name: "Internet Explorer", component: "InternetExplorer", items: [] },

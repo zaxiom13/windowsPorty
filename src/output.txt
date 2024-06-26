@@ -72,6 +72,7 @@ components
 Desktop
 └── Desktop.svelte
 Taskbar
+├── MenuItemComponent.svelte
 ├── StartButton.svelte
 ├── StartMenu.svelte
 ├── Taskbar.svelte
@@ -82,12 +83,15 @@ Window
 ├── Titlebar.svelte
 ├── WindowButtons.svelte
 └── WindowContent.svelte
+config
+└── startMenuStructure.ts
 stores
 ├── backgroundColorStore.ts
 └── tilesStore.ts
 styles
 └── desktop.css
 types
+├── StartMenuItem.ts
 └── TileData.ts
 utils
 ├── addTile.ts
@@ -726,13 +730,14 @@ File: lib/components/Desktop/Desktop.svelte
     import { tilesStore } from '$lib/stores/tilesStore';
     import { backgroundColor } from '$lib/stores/backgroundColorStore';
     import '$lib/styles/desktop.css';
+    import type { StartMenuStructure } from '$lib/types/StartMenuItem';
   
-    export let startMenuItems: string[] = [];
+    export let startMenuStructure: StartMenuStructure;
   
     let desktop: HTMLDivElement;
   
-    function handleStartMenuItemClick(item: string) {
-      tilesStore.add(desktop, item);
+    function handleStartMenuItemClick(component: string) {
+      tilesStore.add(desktop, component);
     }
   
     onMount(() => {
@@ -751,8 +756,8 @@ File: lib/components/Desktop/Desktop.svelte
       />
     {/each}
     <Taskbar 
+      {startMenuStructure}
       on:menuItemClick={({ detail }) => handleStartMenuItemClick(detail)}
-      {startMenuItems}
     />
   </div>
   
@@ -762,6 +767,70 @@ File: lib/components/Desktop/Desktop.svelte
       height: 100vh;
       position: relative;
       overflow: hidden;
+    }
+  </style>
+=======================
+File: lib/components/Taskbar/MenuItemComponent.svelte
+=======================
+<script lang="ts">
+    import { createEventDispatcher } from 'svelte';
+    import type { StartMenuItem } from '$lib/types/StartMenuItem';
+  
+    export let item: StartMenuItem;
+  
+    const dispatch = createEventDispatcher();
+  
+    function handleClick() {
+      if (item.component) {
+        dispatch('menuItemClick', item.component);
+      }
+    }
+  </script>
+  
+  <div class="menu-item" class:has-submenu={item.items && item.items.length > 0}>
+    <span on:click={handleClick}>{item.name}</span>
+    {#if item.items && item.items.length > 0}
+      <div class="submenu">
+        {#each item.items as subItem}
+          <svelte:self item={subItem} on:menuItemClick />
+        {/each}
+      </div>
+    {/if}
+  </div>
+  
+  <style>
+    .menu-item {
+      position: relative;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: 'Tahoma', sans-serif;
+      font-size: 11px;
+    }
+  
+    .menu-item:hover {
+      background-color: #000080;
+      color: white;
+    }
+  
+    .has-submenu::after {
+      content: '▶';
+      position: absolute;
+      right: 8px;
+      font-size: 8px;
+    }
+  
+    .submenu {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background-color: #D4D0C8;
+      border: 1px solid #808080;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    }
+  
+    .menu-item:hover > .submenu {
+      display: block;
     }
   </style>
 =======================
@@ -815,28 +884,27 @@ File: lib/components/Taskbar/StartButton.svelte
 =======================
 File: lib/components/Taskbar/StartMenu.svelte
 =======================
+<!-- File: lib/components/Taskbar/StartMenu.svelte -->
 <script lang="ts">
+  import type { StartMenuStructure } from '$lib/types/StartMenuItem';
   import { createEventDispatcher } from 'svelte';
+  import MenuItemComponent from './MenuItemComponent.svelte';
 
+  export let menuStructure: StartMenuStructure;
   export let visible: boolean = false;
   
   const dispatch = createEventDispatcher();
 
-  export let items = [
-    "Programs",
-    "Documents",
-    "Settings",
-    "Find",
-    "Help",
-    "Run...",
-    "Log Off...",
-    "Shut Down..."
-  ];
-
-  function handleItemClick(item: string) {
-    dispatch('menuItemClick', item);
+  function handleMenuItemClick(event: CustomEvent<string>) {
+    dispatch('menuItemClick', event.detail);
   }
 </script>
+
+<div class="start-menu" class:visible>
+  {#each menuStructure.items as item}
+    <MenuItemComponent {item} on:menuItemClick={handleMenuItemClick} />
+  {/each}
+</div>
 
 <style>
   .start-menu {
@@ -855,25 +923,7 @@ File: lib/components/Taskbar/StartMenu.svelte
   .start-menu.visible {
     display: block;
   }
-
-  .menu-item {
-    padding: 4px 8px;
-    cursor: pointer;
-    font-family: 'Tahoma', sans-serif;
-    font-size: 11px;
-  }
-
-  .menu-item:hover {
-    background-color: #000080;
-    color: white;
-  }
 </style>
-
-<div class="start-menu {visible ? 'visible' : ''}">
-  {#each items as item}
-    <div class="menu-item" on:click={() => handleItemClick(item)}>{item}</div>
-  {/each}
-</div>
 =======================
 File: lib/components/Taskbar/Taskbar.svelte
 =======================
@@ -883,10 +933,11 @@ File: lib/components/Taskbar/Taskbar.svelte
   import StartMenu from './StartMenu.svelte';
   import TaskbarButton from './TaskbarButton.svelte';
   import { tilesStore } from '$lib/stores/tilesStore';
+  import type { StartMenuStructure } from '$lib/types/StartMenuItem';
 
   const dispatch = createEventDispatcher();
 
-  export let startMenuItems: string[] = [];
+  export let startMenuStructure: StartMenuStructure;
 
   let isStartMenuVisible: boolean = false;
 
@@ -903,8 +954,8 @@ File: lib/components/Taskbar/Taskbar.svelte
     }
   }
 
-  function handleMenuItemClick(item: string) {
-    dispatch('menuItemClick', item);
+  function handleMenuItemClick(event: CustomEvent<string>) {
+    dispatch('menuItemClick', event.detail);
     isStartMenuVisible = false;
   }
 
@@ -939,9 +990,9 @@ File: lib/components/Taskbar/Taskbar.svelte
 </div>
 
 <StartMenu
+  menuStructure={startMenuStructure}
   visible={isStartMenuVisible}
-  items={startMenuItems}
-  on:menuItemClick={(event) => handleMenuItemClick(event.detail)}
+  on:menuItemClick={handleMenuItemClick}
 />
 
 <style>
@@ -966,6 +1017,7 @@ File: lib/components/Taskbar/Taskbar.svelte
     height: 100%;
   }
 </style>
+
 =======================
 File: lib/components/Taskbar/TaskbarButton.svelte
 =======================
@@ -1347,6 +1399,58 @@ File: lib/components/Window/WindowContent.svelte
   }
 </style>
 =======================
+File: lib/config/startMenuStructure.ts
+=======================
+// File: lib/config/startMenuStructure.ts
+
+import type { StartMenuStructure } from '$lib/types/StartMenuItem';
+
+const startMenuStructure: StartMenuStructure = {
+  name: 'Start',
+  items: [
+    {
+      name: "Programs",
+      items: [
+        {
+          name: "Accessories",
+          items: [
+            { name: "Calculator", component: "Calculator", items: [] },
+            { name: "Notepad", component: "Notepad", items: [] },
+            { name: "Paint", component: "Paint", items: [] },
+            { name: "WordPad", component: "WordPad", items: [] }
+          ]
+        },
+        { name: "Internet Explorer", component: "InternetExplorer", items: [] },
+        { name: "Minesweeper", component: "Minesweeper", items: [] },
+        { name: "Solitaire", component: "Solitaire", items: [] }
+      ]
+    },
+    {
+      name: "Documents",
+      items: []
+    },
+    {
+      name: "Settings",
+      items: [
+        { name: "Control Panel", component: "PlaceholderApp", items: [] },
+        { name: "Printers", component: "PlaceholderApp", items: [] }
+      ]
+    },
+    {
+      name: "Find",
+      items: [
+        { name: "Files or Folders...", component: "PlaceholderApp", items: [] },
+        { name: "Computer...", component: "PlaceholderApp", items: [] }
+      ]
+    },
+    { name: "Help", component: "PlaceholderApp", items: [] },
+    { name: "Run...", component: "PlaceholderApp", items: [] },
+    { name: "Shut Down...", component: "PlaceholderApp", items: [] }
+  ]
+};
+
+export default startMenuStructure;
+=======================
 File: lib/stores/backgroundColorStore.ts
 =======================
 import { writable } from 'svelte/store';
@@ -1399,6 +1503,25 @@ File: lib/styles/desktop.css
   position: relative;
   overflow: hidden;
 }
+=======================
+File: lib/types/StartMenuItem.ts
+=======================
+export interface StartMenuItem {
+    name: string;
+    component?: string;
+    items: StartMenuItem[];
+  }
+  
+  export interface StartMenuItemWithOptionalItems {
+    name: string;
+    component?: string;
+    items?: StartMenuItemWithOptionalItems[];
+  }
+  
+  export interface StartMenuStructure {
+    name: string;
+    items: StartMenuItem[];
+  }
 =======================
 File: lib/types/TileData.ts
 =======================
@@ -1648,21 +1771,10 @@ File: routes/+page.svelte
 =======================
 <script lang="ts">
   import Desktop from '$lib/components/Desktop/Desktop.svelte';
-
-  const startMenuItems = [
-    'Calculator',
-    'Notepad',
-    'Settings',
-    'Paint',
-    'File Explorer',
-    'Internet Explorer',
-    'Minesweeper',
-    'Solitaire',
-    'WordPad'
-  ];
+  import startMenuStructure from '$lib/config/startMenuStructure';
 </script>
 
-<Desktop {startMenuItems} />
+<Desktop {startMenuStructure} />
 =======================
 File: routes/+page.ts
 =======================
