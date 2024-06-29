@@ -13,8 +13,8 @@
     }
   </script>
   
-  <div class="menu-item" class:has-submenu={item.items && item.items.length > 0}>
-    <span on:click={handleClick}>{item.name}</span>
+  <div class="menu-item" on:click={handleClick} class:has-submenu={item.items && item.items.length > 0}>
+    <span>{item.name}</span>
     {#if item.items && item.items.length > 0}
       <div class="submenu">
         {#each item.items as subItem}
