@@ -1,24 +1,18 @@
 import { tileManager } from './TileManager.ts';
-import { 
-  calculateWindowPosition, 
-  constrainWindowPosition, 
-  calculateResizedDimensions 
-} from '../utils/windowUtils';
-
+import { calculateWindowPosition, constrainWindowPosition, calculateResizedDimensions } from '../utils/windowUtils';
+import Victor from 'victor';
 
 export class Tile {
     private tile: HTMLDivElement;
     private desktop: HTMLDivElement;
-    private isDragging: boolean = false;
-    private isResizing: boolean = false;
-    private startX!: number;
-    private startY!: number;
-    private initialX!: number;
-    private initialY!: number;
-    private initialWidth!: number;
-    private initialHeight!: number;
-    private resizeDirection!: string;
+    private isDragging = false;
+    private isResizing = false;
+    private startPos = new Victor(0, 0);
+    private initialPos = new Victor(0, 0);
+    private initialSize = new Victor(0, 0);
+    private resizeDirection = '';
     private onFocus: () => void;
+
     constructor(tile: HTMLDivElement, desktop: HTMLDivElement, onFocus: () => void) {
         this.tile = tile;
         this.desktop = desktop;
@@ -26,9 +20,9 @@ export class Tile {
         tileManager.registerTile(this.tile);
         this.initializeEventListeners();
 
-        const { x, y } = calculateWindowPosition(this.desktop, this.tile.clientWidth, this.tile.clientHeight);
-        this.tile.style.left = `${x}px`;
-        this.tile.style.top = `${y}px`;
+        const initialPos = calculateWindowPosition(this.desktop, new Victor(this.tile.clientWidth, this.tile.clientHeight));
+        this.tile.style.left = `${initialPos.x}px`;
+        this.tile.style.top = `${initialPos.y}px`;
     }
 
     private initializeEventListeners() {
@@ -37,10 +31,8 @@ export class Tile {
 
     public startDragging(event: MouseEvent) {
         this.isDragging = true;
-        this.startX = event.clientX;
-        this.startY = event.clientY;
-        this.initialX = this.tile.offsetLeft;
-        this.initialY = this.tile.offsetTop;
+        this.startPos = new Victor(event.clientX, event.clientY);
+        this.initialPos = new Victor(this.tile.offsetLeft, this.tile.offsetTop);
 
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
         window.addEventListener('mouseup', this.onMouseUp.bind(this));
@@ -57,12 +49,9 @@ export class Tile {
         const target = event.target as HTMLElement;
         if (target.classList.contains('resize-handle')) {
             this.isResizing = true;
-            this.startX = event.clientX;
-            this.startY = event.clientY;
-            this.initialWidth = this.tile.clientWidth;
-            this.initialHeight = this.tile.clientHeight;
-            this.initialX = this.tile.offsetLeft;
-            this.initialY = this.tile.offsetTop;
+            this.startPos = new Victor(event.clientX, event.clientY);
+            this.initialSize = new Victor(this.tile.clientWidth, this.tile.clientHeight);
+            this.initialPos = new Victor(this.tile.offsetLeft, this.tile.offsetTop);
             this.resizeDirection = target.dataset.direction as string;
 
             window.addEventListener('mousemove', this.onMouseMove.bind(this));
@@ -72,50 +61,38 @@ export class Tile {
     }
 
     private onMouseMove(event: MouseEvent) {
+        const currentPos = new Victor(event.clientX, event.clientY);
+        const delta = currentPos.clone().subtract(this.startPos);
+
         if (this.isDragging) {
-            this.handleDragging(event);
+            this.handleDragging(delta);
         } else if (this.isResizing) {
-            this.handleResizing(event);
+            this.handleResizing(delta);
         }
     }
 
-    private handleDragging(event: MouseEvent) {
-        const dx = event.clientX - this.startX;
-        const dy = event.clientY - this.startY;
+    private handleDragging(delta: Victor) {
+        const newPos = this.initialPos.clone().add(delta);
+        const constrainedPos = constrainWindowPosition(newPos, new Victor(this.tile.clientWidth, this.tile.clientHeight), this.desktop);
 
-        const { x: newX, y: newY } = constrainWindowPosition(
-            this.initialX + dx,
-            this.initialY + dy,
-            this.tile.clientWidth,
-            this.tile.clientHeight,
-            this.desktop
-        );
-
-        this.tile.style.left = `${newX}px`;
-        this.tile.style.top = `${newY}px`;
+        this.tile.style.left = `${constrainedPos.x}px`;
+        this.tile.style.top = `${constrainedPos.y}px`;
     }
 
-    private handleResizing(event: MouseEvent) {
-        const dx = event.clientX - this.startX;
-        const dy = event.clientY - this.startY;
-
-        const { newWidth, newHeight, newX, newY } = calculateResizedDimensions(
+    private handleResizing(delta: Victor) {
+        const { newSize, newPos } = calculateResizedDimensions(
             this.resizeDirection,
-            this.startX,
-            this.startY,
-            this.initialWidth,
-            this.initialHeight,
-            this.initialX,
-            this.initialY,
-            dx,
-            dy,
+            this.startPos,
+            this.initialSize,
+            this.initialPos,
+            delta,
             this.desktop
         );
 
-        this.tile.style.width = `${newWidth}px`;
-        this.tile.style.height = `${newHeight}px`;
-        this.tile.style.left = `${newX}px`;
-        this.tile.style.top = `${newY}px`;
+        this.tile.style.width = `${newSize.x}px`;
+        this.tile.style.height = `${newSize.y}px`;
+        this.tile.style.left = `${newPos.x}px`;
+        this.tile.style.top = `${newPos.y}px`;
     }
 
     private onMouseUp() {

@@ -1,82 +1,67 @@
-// src/lib/utils/windowUtils.ts
+import Victor from 'victor';
 
-export function calculateWindowPosition(desktop: HTMLElement, width: number, height: number) {
+export const calculateWindowPosition = (desktop: HTMLDivElement, size: Victor): Victor => {
     const desktopRect = desktop.getBoundingClientRect();
-    const maxX = desktopRect.width - width;
-    const maxY = desktopRect.height - height - 28; // Subtract taskbar height
-  
-    const x = Math.floor(Math.random() * maxX);
-    const y = Math.floor(Math.random() * maxY);
-  
-    return { x, y };
-  }
-  
-  export function constrainWindowPosition(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    desktop: HTMLElement
-  ) {
+    const x = (desktopRect.width - size.x) / 2;
+    const y = (desktopRect.height - size.y) / 2;
+    return new Victor(x, y);
+};
+
+export const constrainWindowPosition = (
+    position: Victor,
+    size: Victor,
+    desktop: HTMLDivElement
+): Victor => {
     const desktopRect = desktop.getBoundingClientRect();
-    const maxX = desktopRect.width - width;
-    const maxY = desktopRect.height - height - 28; // Subtract taskbar height
-  
+    const newX = Math.max(0, Math.min(position.x, desktopRect.width - size.x));
+    const newY = Math.max(0, Math.min(position.y, desktopRect.height - size.y));
+    return new Victor(newX, newY);
+};
+
+export const calculateResizedDimensions = (
+    resizeDirection: string,
+    startPos: Victor,
+    initialSize: Victor,
+    initialPos: Victor,
+    delta: Victor,
+    desktop: HTMLDivElement
+): {
+    newSize: Victor;
+    newPos: Victor;
+} => {
+    const minSize = new Victor(100, 100);
+    const maxSize = new Victor(500, 500);
+    const desktopRect = desktop.getBoundingClientRect();
+
+    const newSize = resizeDirection.includes('right')
+        ? new Victor(initialSize.x + delta.x, initialSize.y)
+        : resizeDirection.includes('left')
+        ? new Victor(initialSize.x - delta.x, initialSize.y)
+        : initialSize.clone();
+
+    newSize.y = resizeDirection.includes('bottom')
+        ? initialSize.y + delta.y
+        : resizeDirection.includes('top')
+        ? initialSize.y - delta.y
+        : initialSize.y;
+
+    const newPos = resizeDirection.includes('left')
+        ? new Victor(initialPos.x + delta.x, initialPos.y)
+        : initialPos.clone();
+
+    newPos.y = resizeDirection.includes('top')
+        ? initialPos.y + delta.y
+        : initialPos.y;
+
+    const constrainedSize = new Victor(
+        Math.max(minSize.x, Math.min(newSize.x, maxSize.x)),
+        Math.max(minSize.y, Math.min(newSize.y, maxSize.y))
+    );
+
+    const constrainedPos = constrainWindowPosition(newPos, constrainedSize, desktop);
+
     return {
-      x: Math.max(0, Math.min(x, maxX)),
-      y: Math.max(0, Math.min(y, maxY)),
+        newSize: constrainedSize,
+        newPos: constrainedPos,
     };
-  }
-  
-  export function calculateResizedDimensions(
-    direction: string,
-    startX: number,
-    startY: number,
-    initialWidth: number,
-    initialHeight: number,
-    initialX: number,
-    initialY: number,
-    dx: number,
-    dy: number,
-    desktop: HTMLElement
-  ) {
-    const desktopRect = desktop.getBoundingClientRect();
-    const minWidth = 100;
-    const minHeight = 100;
-    const maxWidth = 500;
-    const maxHeight = 500;
-  
-    let newWidth = initialWidth;
-    let newHeight = initialHeight;
-    let newX = initialX;
-    let newY = initialY;
-  
-    if (direction.includes('right')) {
-      newWidth = Math.min(
-        Math.max(minWidth, initialWidth + dx),
-        desktopRect.width - initialX,
-        maxWidth
-      );
-    }
-    if (direction.includes('bottom')) {
-      newHeight = Math.min(
-        Math.max(minHeight, initialHeight + dy),
-        desktopRect.height - initialY - 28,
-        maxHeight
-      );
-    }
-    if (direction.includes('left')) {
-      const maxLeftMove = Math.min(initialWidth - minWidth, initialX);
-      const leftMove = Math.max(-maxLeftMove, Math.min(dx, initialWidth - minWidth));
-      newWidth = Math.min(initialWidth - leftMove, maxWidth);
-      newX = initialX + initialWidth - newWidth;
-    }
-    if (direction.includes('top')) {
-      const maxTopMove = Math.min(initialHeight - minHeight, initialY);
-      const topMove = Math.max(-maxTopMove, Math.min(dy, initialHeight - minHeight));
-      newHeight = Math.min(initialHeight - topMove, maxHeight);
-      newY = initialY + initialHeight - newHeight;
-    }
-  
-    return { newWidth, newHeight, newX, newY };
-  }
+};
