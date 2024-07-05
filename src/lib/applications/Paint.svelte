@@ -7,29 +7,53 @@ let isDrawing = false;
 let color = '#000000';
 let lineWidth = 1;
 let tool = 'pencil';
+let containerDiv: HTMLDivElement;
 
 onMount(() => {
   ctx = canvas.getContext('2d')!;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  
+  // Set canvas size to match its container
+  function resizeCanvas() {
+    canvas.width = containerDiv.clientWidth;
+    canvas.height = containerDiv.clientHeight;
+  }
+  
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  return () => {
+    window.removeEventListener('resize', resizeCanvas);
+  };
 });
 
 function startDrawing(event: MouseEvent) {
   isDrawing = true;
-  draw(event);
+  const { x, y } = getMousePos(event);
+  ctx.beginPath();
+  ctx.moveTo(x, y);
 }
+
 
 function stopDrawing() {
   isDrawing = false;
   ctx.beginPath();
 }
+function getMousePos(event: MouseEvent) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY
+  };
+}
 
 function draw(event: MouseEvent) {
   if (!isDrawing) return;
 
-  const rect = canvas.getBoundingClientRect();
-  const x = event.clientX + (2*rect.left);
-  const y = event.clientY + (0.5*rect.top);
+  const { x, y } = getMousePos(event);
 
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth;
@@ -87,9 +111,16 @@ function clearCanvas() {
   background-color: #ECE9D8;
   border: 1px solid #0A246A;
   font-family: 'Tahoma', sans-serif;
-  width:100%;
-  height:100%;
+  width: 100%;
+  height: 100%;
 }
+
+canvas {
+  flex-grow: 1;
+  background-color: #FFFFFF;
+  cursor: crosshair;
+}
+
 
 .toolbar {
   display: flex;
