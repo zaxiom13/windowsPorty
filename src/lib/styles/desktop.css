@@ -1,6 +1,24 @@
 .desktop {
-  width: 100%;
-  height: 100vh;
+  width: 100vw;
+  height: calc(100vh - var(--taskbar-height));
   position: relative;
+  overflow: hidden;
+}
+
+:root {
+  --taskbar-height: 40px;
+  --window-border: 1px solid #0078d7;
+  --window-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --titlebar-gradient: linear-gradient(to bottom, #0078d7, #0063b1);
+  --titlebar-text: #ffffff;
+  --window-background: #f0f0f0;
+  --button-highlight: #3399ff;
+}
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-image: url('path_to_windows_xp_bliss_wallpaper.jpg');
+  background-size: cover;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
 }

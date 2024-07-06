@@ -13,7 +13,7 @@
   export let title: string;
 </script>
 
-<div class="body">
+<div class="window-content body">
   {#if title === 'Calculator'}
     <Calculator />
   {:else if title === 'Notepad'}
@@ -41,7 +41,6 @@
 
 <style>
   .body {
-    width: 100%;
     height: calc(100% - 22px);
     background-color: #ffffff;
     flex: 1;
@@ -51,5 +50,9 @@
     font-family: 'Tahoma', sans-serif;
     font-size: 11px;
     overflow: auto;
+  }
+  .window-content {
+  flex-grow: 1;
+  overflow: auto;
   }
 </style>
